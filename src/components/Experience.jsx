@@ -1,7 +1,5 @@
 import {
-  Float,
-  MeshDistortMaterial,
-  MeshWobbleMaterial,
+
   useScroll,
 } from "@react-three/drei";
 import { useFrame, useThree } from "@react-three/fiber";
@@ -39,7 +37,7 @@ export const Experience = (props) => {
   useEffect(() => {
     setCharacterAnimation("Falling");
     setTimeout(() => {
-      setCharacterAnimation(section === 0 ? "Typing" : "Standing");
+      setCharacterAnimation(section === 2 ? "Typing" : "Standing");
     }, 600);
   }, [section]);
 
@@ -81,9 +79,9 @@ export const Experience = (props) => {
         }}
         variants={{
           0: {
-            scaleX: 0.9,
-            scaleY: 0.9,
-            scaleZ: 0.9,
+            scaleX: 0.01,
+            scaleY: 0.01,
+            scaleZ: 0.01,
           },
           1: {
             y: -viewport.height + 0.5,
@@ -140,7 +138,7 @@ export const Experience = (props) => {
         }}
       >
         <directionalLight position={[-5, 3, 5]} intensity={0.4} />
-        <Float>
+        {/* <Float>
           <mesh position={[1, -3, -15]} scale={[2, 2, 2]}>
             <sphereGeometry />
             <MeshDistortMaterial
@@ -176,7 +174,7 @@ export const Experience = (props) => {
             />
           </mesh>
         </Float>
-      </motion.group>
+      */} </motion.group>
       <Projects />
     </>
   );

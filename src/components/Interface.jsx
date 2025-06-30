@@ -32,7 +32,7 @@ const Section = (props) => {
 export const Interface = (props) => {
   const { setSection } = props;
   return (
-    <div className="flex flex-col items-center w-screen">
+    <div className="flex flex-col items-center w-screen ">
       <AboutSection setSection={setSection} />
       <SkillsSection />
       <ProjectsSection />
@@ -45,11 +45,7 @@ const AboutSection = (props) => {
   const { setSection } = props;
   return (
     <Section>
-      <h1 className="text-6xl font-extrabold leading-snug">
-        Hi, I'm
-        <br />
-        <span className="bg-white px-1 italic">Wawa Sensei</span>
-      </h1>
+    
       <motion.p
         className="text-lg text-gray-600 mt-4"
         initial={{
@@ -65,41 +61,21 @@ const AboutSection = (props) => {
           delay: 1.5,
         }}
       >
-        I make YouTube videos to help developers
         <br />
-        learn how to build 3D apps
       </motion.p>
-      <motion.button
-        onClick={() => setSection(3)}
-        className={`bg-indigo-600 text-white py-4 px-8 
-      rounded-lg font-bold text-lg mt-16`}
-        initial={{
-          opacity: 0,
-          y: 25,
-        }}
-        whileInView={{
-          opacity: 1,
-          y: 0,
-        }}
-        transition={{
-          duration: 1,
-          delay: 2,
-        }}
-      >
-        Contact me
-      </motion.button>
+      
     </Section>
   );
 };
 
 const skills = [
   {
-    title: "Threejs / React Three Fiber",
+    title: "React/Javascript",
     level: 80,
   },
   {
-    title: "React / React Native",
-    level: 90,
+    title: "Photoshop",
+    level: 70,
   },
   {
     title: "Nodejs",
@@ -111,20 +87,20 @@ const skills = [
   },
   {
     title: "3D Modeling",
-    level: 40,
+    level: 99,
   },
 ];
 const languages = [
   {
-    title: "🇫🇷 French",
+    title: "🇺🇸 English",
     level: 100,
   },
   {
-    title: "🇺🇸 English",
-    level: 80,
+    title: "es Espanol",
+    level: 50,
   },
   {
-    title: "🇯🇵 Japanese",
+    title: "de Deutch",
     level: 20,
   },
 ];
@@ -246,7 +222,7 @@ const ProjectsSection = () => {
         >
           ← Previous
         </button>
-        <h2 className="text-5xl font-bold">Projects</h2>
+        <h2 className="text-5xl font-bold">my work...</h2>
         <button
           className="hover:text-indigo-600 transition-colors"
           onClick={nextProject}
@@ -261,9 +237,9 @@ const ProjectsSection = () => {
 const ContactSection = () => {
   return (
     <Section>
-      <h2 className="text-5xl font-bold">Contact me</h2>
-      <div className="mt-8 p-8 rounded-md bg-white w-96 max-w-full">
-        <form>
+      <h2 className="text-7xl text-slate-50 font-bold bg-slate-950">Let's get crackin'</h2>
+      <div className="mt-8 p-8 rounded-md  w-96 max-w-full">
+        {/* <form>
           <label for="name" className="font-medium text-gray-900 block mb-1">
             Name
           </label>
@@ -299,6 +275,52 @@ const ContactSection = () => {
           <button className="bg-indigo-600 text-white py-4 px-8 rounded-lg font-bold text-lg mt-16 ">
             Submit
           </button>
+        </form> */}
+        <form>
+<motion.label
+  htmlFor="name"
+  className="font-medium text-3xl text-white drop-shadow-2xl block mb-1 cursor-none"
+  whileHover={{ scale: 1.2 }}
+  transition={{ type: "spring", stiffness: 300, damping: 20 }}
+>            Michael Murray - Age 23
+          </motion.label>
+          <br></br>
+          <a
+  href="https://www.base64decode.org/"
+  target="_blank"
+  rel="noopener noreferrer"
+>
+          <motion.label for="name" className="font-medium text-xl text-slate-50 drop-shadow-xl  block mb-1 cursor-pointer"
+             whileHover={{ scale: 1.1 }}
+  transition={{ type: "spring", stiffness: 200, damping: 20 }}>
+phone number (base64 encoded)          </motion.label>
+</a>
+<label for="name" className="font-medium text-xl text-slate-50 drop-shadow-xl  block mb-1 cursor-text ">
+KzEgMjYyLTIzMC01MTgy          </label>
+
+<a
+href="mailto:amurraymichael@gmail.com?subject=Hello&body=I%20wanted%20to%20reach%20out..."
+  target="_blank"
+  rel="noopener noreferrer"
+>
+          <motion.label
+            htmlFor="email"
+            className="font-medium text-xl  text-slate-50 drop-shadow-lg  block mb-1 mt-8 cursor-pointer"
+             whileHover={{ scale: 1.1 }}
+  transition={{ type: "spring", stiffness: 200, damping: 20 }}
+          >
+            Email- amurraymichael@gmail.com
+          </motion.label>
+          </a>
+
+          <motion.label
+            for="email"
+            className="font-medium text-gray-900 block mb-1 mt-8 "
+           
+          >
+            
+          </motion.label>
+         
         </form>
       </div>
     </Section>

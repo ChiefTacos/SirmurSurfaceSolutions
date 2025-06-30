@@ -10,3 +10,7 @@
 body {
   margin: 0;
 }
+.hide-native-cursor {
+  cursor: none !important;
+  background-color: rgba(255, 0, 0, 0.1); /* just to see if style applies */
+}

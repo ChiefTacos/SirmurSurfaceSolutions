@@ -3,16 +3,15 @@ import { useFrame } from "@react-three/fiber";
 import { animate, useMotionValue } from "framer-motion";
 import { motion } from "framer-motion-3d";
 import React, { useEffect, useRef } from "react";
-
 import * as THREE from "three";
 
 export function Office(props) {
   const { section } = props;
   const group = useRef();
-  const { nodes, materials, animations } = useGLTF("models/scene.gltf");
+  const { nodes, materials, animations } = useGLTF("models/scene.glb");
   const texture = useTexture("textures/scene.jpg");
   const textureVSCode = useVideoTexture("textures/vscode.mp4");
-  const { actions } = useAnimations(animations, group);
+  const { actions, mixer } = useAnimations(animations, group);
 
   texture.flipY = false;
   texture.encoding = THREE.sRGBEncoding;
@@ -51,54 +50,132 @@ export function Office(props) {
     if (section === 0) {
       startAnimations(); 
     } */
-      const startAnimations = () => {
+     
+/*      const startAnimations = () => {
+   Object.keys(actions).forEach((key) => {
+     const action = actions[key];
 
-        Object.keys(actions).forEach((key) => {
-          const action = actions[key];
-          if (key.includes("logoAnimation")) {
-            // Add event listener for when the animation finishes
-            action.setLoop(1,3);
+     if (key.includes("logoAnimation")) {
+       // Reset and play the animation from the start
+       action.reset();
 
-            action.clampWhenFinished = true;
-            action.setEffectiveTimeScale(1); // Ensure linear time scale
-            action.reset();
-            action.play();
-            action.stopFading().stopWarping();
+       // Clamp the animation to stop exactly at the end frame
+       action.clampWhenFinished = true;
 
-          
-            action.onFinish = () => {
-              action.reset();
-              action.stop();
-            }
-          }
-        });
+       // Play only once (LoopOnce)
+       action.setLoop(THREE.LoopOnce, 1);
+
+       // Make sure playback is at normal speed
+       action.setEffectiveTimeScale(1);
+       action.setEffectiveWeight(1);
+
+       // Remove any fade or warp effects
+       action.stopFading();
+       action.stopWarping();
+
+       // Play the animation
+       action.play();
+
+      // Optional: add a listener or timeout to handle post-animation logic
+       // For example, if you need to clean up after a certain time
+       const duration = action.getClip().duration;
+       setTimeout(() => {
+         action.stop();
+         action.reset(); // Ready for next play
+       }, duration * 1000); // convert to milliseconds
+     }
+   });
+ }; */
+ const loopCounts = {};
+ const startAnimations = () => {
+   Object.keys(actions).forEach((key) => {
+     const action = actions[key];
+if (key.includes("logoAnimation")) {
+      // Initialize loop count
+      loopCounts[key] = 1;
+
+      const playOnce = () => {
+        action.reset();
+        action.clampWhenFinished = true;
+        action.setLoop(THREE.LoopOnce, 1);
+        action.setEffectiveTimeScale(1);
+        action.setEffectiveWeight(1);
+        action.stopFading();
+        action.stopWarping();
+        action.play();
       };
-    
-      if (section === 0) {
-        startAnimations();
-      }
-    
-      return () => {
-        // Clean up the event listener to avoid memory leaks
-        Object.keys(actions).forEach((key) => {
-          const action = actions[key];
-          if (action.onFinish) {
-            action.onFinish = null;
+
+      // Remove any previous listener to avoid stacking
+      mixer.removeEventListener('finished');
+
+      mixer.addEventListener('finished', (e) => {
+        if (e.action === action) {
+          loopCounts[key] += 1;
+          if (loopCounts[key] <= 2) {
+            playOnce();
           }
-        });
-      };
-  }, [section]);
+        }
+      });
+
+      playOnce(); // Start the first cycle
+    }
+  });
+};
+       if (section === 0) {
+         startAnimations();
+       }
+    
+       return () => {
+         // Clean up the event listener to avoid memory leaks
+         Object.keys(actions).forEach((key) => {
+           const action = actions[key];
+           if (action.onFinish) {
+             action.onFinish = null;
+           }
+         });
+       };
+   }, [section]);
+
+
+/*   if (section !== 0) return;
+
+  Object.values(actions).forEach((action) => {
+    action.reset();
+    action.clampWhenFinished = false;         // Don't clamp at last frame
+    action.setLoop(THREE.LoopRepeat, Infinity);
+    action.setEffectiveTimeScale(1);
+    action.setEffectiveWeight(1);
+    action.play();
+  });
+
+  return () => {
+    Object.values(actions).forEach((action) => {
+      action.stop();
+      action.reset();
+    });
+  };
+}, [section, actions]);
+ */
 
   useFrame(() => {
     textureMaterial.opacity = textureOpacity.get();
     textureGlassMaterial.opacity = glassTextureOpacity.get();
   });
+const ZoomCamera = ({ isFirstSlide }) => {
+  const { camera } = useThree();
 
+  useFrame(() => {
+    camera.position.z = isFirstSlide ? 34 : 10;
+    camera.updateProjectionMatrix();
+  });
+
+  return null;
+};
   return (
-    <group ref={group} {...props} dispose={null} position={[0, 4, 6]} rotation={[0, 4.5, 0]} scale={0.5}>
+    <group ref={group} {...props} dispose={null} position={[0, 4.5, 6]}  rotation={[0, 5.5, 0.4]} scale={0.5}>
       
       <group name="Scene">
-        <group name="Cylinder004" position={[-3.693, -4.155, -4.282]}>
+         <group name="Cylinder004" position={[-3.693, -4.155, -4.282]}>
           <mesh name="Cylinder111" geometry={nodes.Cylinder111.geometry} material={textureMaterial} />
           <mesh name="Cylinder111_1" geometry={nodes.Cylinder111_1.geometry} material={textureMaterial} />
           <mesh name="Cylinder111_2" geometry={nodes.Cylinder111_2.geometry} material={textureMaterial} />
@@ -368,8 +445,8 @@ export function Office(props) {
           <mesh name="Houseplant_3_3" geometry={nodes.Houseplant_3_3.geometry} material={textureMaterial} />
           <mesh name="Houseplant_3_4" geometry={nodes.Houseplant_3_4.geometry} material={textureMaterial} />
         </group>
-        <mesh name="Plane010" geometry={nodes.Plane010.geometry} material={textureMaterial} />
-        <mesh name="Plane011" geometry={nodes.Plane011.geometry} material={textureMaterial} />
+        <mesh name="Plane010" geometry={nodes.Plane010.geometry} material={textureMaterial} position={[0, 0.068, 0]} />
+        <mesh name="Plane011" geometry={nodes.Plane011.geometry} material={textureMaterial} position={[0, 0.068, 0]} />
         <group name="FlowerPot2001">
           <mesh name="FlowerPot2001_1" geometry={nodes.FlowerPot2001_1.geometry} material={textureMaterial} />
           <mesh name="FlowerPot2001_2" geometry={nodes.FlowerPot2001_2.geometry} material={textureMaterial} />
@@ -382,4 +459,4 @@ export function Office(props) {
   );
 }
 
-useGLTF.preload("models/scene.gltf");
+useGLTF.preload("models/scene.glb");
