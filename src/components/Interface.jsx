@@ -238,7 +238,7 @@ const ContactSection = () => {
   return (
     <Section>
       <h2 className="text-7xl text-slate-50 font-bold bg-slate-950">Let's get crackin'</h2>
-      <div className="mt-8 p-8 rounded-md  w-96 max-w-full">
+      <div className="mt-8 p-2 rounded-md  w-96 md:text-left max-w-full text-center">
         {/* <form>
           <label for="name" className="font-medium text-gray-900 block mb-1">
             Name
@@ -280,23 +280,15 @@ const ContactSection = () => {
 <motion.label
   htmlFor="name"
   className="font-medium text-3xl text-white drop-shadow-2xl block mb-1 cursor-none"
-  whileHover={{ scale: 1.2 }}
+  whileHover={{ scale: 1.15 }}
   transition={{ type: "spring", stiffness: 300, damping: 20 }}
->            Michael Murray - Age 23
+>            Michael Murray <br></br><br></br> Age 23
           </motion.label>
           <br></br>
-          <a
-  href="https://www.base64decode.org/"
-  target="_blank"
-  rel="noopener noreferrer"
->
-          <motion.label for="name" className="font-medium text-xl text-slate-50 drop-shadow-xl  block mb-1 cursor-pointer"
-             whileHover={{ scale: 1.1 }}
-  transition={{ type: "spring", stiffness: 200, damping: 20 }}>
-phone number (base64 encoded)          </motion.label>
-</a>
-<label for="name" className="font-medium text-xl text-slate-50 drop-shadow-xl  block mb-1 cursor-text ">
-KzEgMjYyLTIzMC01MTgy          </label>
+
+
+<label for="name" className="font-medium text-lg text-slate-50 drop-shadow-xl   mb-1 cursor-text ">
+Born in Chicago IL. Interested in carpentry and electrical apprenticeship programs or construction work. I'm a dual citizen of the USA and Germany.          </label>
 
 <a
 href="mailto:amurraymichael@gmail.com?subject=Hello&body=I%20wanted%20to%20reach%20out..."
@@ -309,7 +301,7 @@ href="mailto:amurraymichael@gmail.com?subject=Hello&body=I%20wanted%20to%20reach
              whileHover={{ scale: 1.1 }}
   transition={{ type: "spring", stiffness: 200, damping: 20 }}
           >
-            Email- amurraymichael@gmail.com
+            Email Me
           </motion.label>
           </a>
 

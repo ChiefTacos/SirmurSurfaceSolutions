@@ -80,8 +80,8 @@ export const Experience = (props) => {
         variants={{
           0: {
             scaleX: 0.01,
-            scaleY: 0.01,
             scaleZ: 0.01,
+            scaleY: 0.01,
           },
           1: {
             y: -viewport.height + 0.5,
@@ -118,7 +118,15 @@ export const Experience = (props) => {
         rotation-y={-Math.PI / 4}
         animate={{
           y: section === 0 ? 0 : -1,
+          
         }}
+/*        animate={{
+  y: section === 1 ? 0 : -5,
+  z: section === 1 ? 0 : -5,
+  x: section === 1 ? 0 : 1.5,
+  rotateY: section === 1 ? 0 : -Math.PI / 4,
+}} */
+
       >
         <Office section={section} />
         <group
@@ -131,12 +139,15 @@ export const Experience = (props) => {
 
       {/* SKILLS */}
       <motion.group
-        position={[0, -1.5, -10]}
-        animate={{
-          z: section === 1 ? 0 : -10,
-          y: section === 1 ? -viewport.height : -1.5,
-        }}
-      >
+  scale={[0.9, 0.9, 0.9]}
+  animate={{
+    x: section === 2 ? 0 : 1.5,
+    y: section === 2 ? 0 : 2,
+    z: section === 2 ? 0 : 3,
+  }}
+  transition={{ duration: 0.8, ease: "easeInOut" }}
+  >
+
         <directionalLight position={[-5, 3, 5]} intensity={0.4} />
         {/* <Float>
           <mesh position={[1, -3, -15]} scale={[2, 2, 2]}>

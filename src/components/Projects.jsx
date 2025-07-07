@@ -7,36 +7,48 @@ import { atom, useAtom } from "jotai";
 import { useEffect, useRef } from "react";
 
 export const projects = [
+    {
+    title: "First 3d Website",
+    url: "https://portfolio-six-pi-54.vercel.app/",
+    image: "projects/isoRoom.webp",
+    description: "All started here, with a simple dream...",
+  },
+    {
+    title: "Recipe Site",
+    url: "https://recipe-app-chieftacos.vercel.app/",
+    image: "projects/recipe.png",
+    description: "Used to be fully functional where anyone can login and add recipes, now its just a simple site showing my basic HTML skills.",
+  },
   {
     title: "MurBURGER",
     url: "https://murburger-proto.vercel.app/",
     image: "projects/murburger.png",
-    description: "Recreating the Atmos Awwwards website with React Three Fiber",
+    description: "Prototype website for any restaurant or business that needs to show their products in a 3D space",
   },
   {
-    title: "Portfolio",
-    url: "https://sirmur.com/",
+    title: "3d Renders",
+    url: "#",
     image: "projects/transfer00.jpg",
-    description: "this is the same site",
-  },
- /*  {
-    title: "3D Avatar",
-    url: "https://sirmur.com/",
-    image: "projects/avatar.jpg",
-    description: "Learn how to use ReadyPlayerMe to create a 3D avatar",
+    description: "Spent some time in blender creating virtual spaces",
   },
   {
-    title: "Kanagame",
-    url: "https://sirmur.com/",
-    image: "projects/kanagame.jpg",
-    description: "Use React Three Fiber to create a 3D game",
+    title: "Charcuterie",
+    url: "#",
+    image: "projects/charcutie.jpg",
+    description: "Made high quality charcuterie boards for a summer",
   },
   {
-    title: "Loader",
-    url: "https://www.youtube.com/watch?v=L12wIvuZTOY",
-    image: "projects/loader.jpg",
-    description: "Create a loading screen for your r3f projects",
-  }, */
+    title: "Illustration",
+    url: "#",
+    image: "projects/IMG_2889.jpg",
+    description: "I like to be creative and draw sometimes",
+  },
+  {
+    title: "Chef Murray",
+    url: "#",
+    image: "projects/fancyGreenPlate.jpg",
+    description: "Worked in numerous restaurants and gained experience on the line",
+  },
 ];
 
 

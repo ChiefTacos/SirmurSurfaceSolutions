@@ -14,3 +14,53 @@ body {
   cursor: none !important;
   background-color: rgba(255, 0, 0, 0.1); /* just to see if style applies */
 }
+@keyframes rainbow {
+  0% {
+    background-position: 0% 50%;
+  }
+  50% {
+    background-position: 100% 50%;
+  }
+  100% {
+    background-position: 0% 50%;
+  }
+}
+
+.animate-rainbow {
+  background: linear-gradient(270deg, red, orange, yellow, green, blue, indigo, violet, red);
+  background-size: 1400% 1400%;
+  animation: rainbow 9s ease infinite;
+  z-index: 0;
+  border-radius: inherit;
+}
+@keyframes rainbowText {
+  0% {
+    background-position: 0% 50%;
+  }
+  100% {
+    background-position: 200% 50%;
+  }
+}
+
+.rainbowText {
+  background: linear-gradient(
+    270deg,
+    red,
+    orange,
+    yellow,
+    green,
+    blue,
+    indigo,
+    violet,
+    red
+  );
+  background-size: 200% 200%;
+  background-clip: text;
+  -webkit-background-clip: text;
+  color: transparent;
+  -webkit-text-fill-color: transparent;
+}
+
+.animate-rainbowText {
+  animation: rainbowText 10s linear infinite;
+}
