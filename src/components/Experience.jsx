@@ -69,7 +69,6 @@ export const Experience = (props) => {
 
   return (
     <>
-      <Background />
       <motion.group
         position={[1.9072935059634513, 0.14400000000000002, 2.681801948466054]}
         rotation={[-3.141592653589793, 1.2053981633974482, 3.141592653589793]}
@@ -79,17 +78,20 @@ export const Experience = (props) => {
         }}
         variants={{
           0: {
-            scaleX: 0.01,
-            scaleZ: 0.01,
-            scaleY: 0.01,
+            scaleX: 0.99,
+            scaleZ: 0.99,
+            scaleY: 0.99,
+            y: 0.65,
+            x: -4,
+            z:-10
           },
           1: {
-            y: -viewport.height + 0.5,
-            x: 0,
-            z: 7,
-            rotateX: 0,
-            rotateY: 0,
-            rotateZ: 0,
+           scaleX: 1,
+            scaleZ: 1,
+            scaleY: 1,
+            y: 0.65,
+            x: -4,
+            z:-10
           },
           2: {
             x: -2,
@@ -113,19 +115,15 @@ export const Experience = (props) => {
       </motion.group>
       <ambientLight intensity={1} />
       <motion.group
-        position={[1.5, 2, 3]}
+        position={[1.5, 2, 0]}
         scale={[0.9, 0.9, 0.9]}
-        rotation-y={-Math.PI / 4}
-        animate={{
-          y: section === 0 ? 0 : -1,
-          
-        }}
-/*        animate={{
-  y: section === 1 ? 0 : -5,
-  z: section === 1 ? 0 : -5,
-  x: section === 1 ? 0 : 1.5,
-  rotateY: section === 1 ? 0 : -Math.PI / 4,
-}} */
+        
+        
+         animate={{
+            rotateY: section === 2 ? 0 : Math.PI / -4,
+
+         }}
+
 
       >
         <Office section={section} />
@@ -137,55 +135,7 @@ export const Experience = (props) => {
         ></group>
       </motion.group>
 
-      {/* SKILLS */}
-      <motion.group
-  scale={[0.9, 0.9, 0.9]}
-  animate={{
-    x: section === 2 ? 0 : 1.5,
-    y: section === 2 ? 0 : 2,
-    z: section === 2 ? 0 : 3,
-  }}
-  transition={{ duration: 0.8, ease: "easeInOut" }}
-  >
 
-        <directionalLight position={[-5, 3, 5]} intensity={0.4} />
-        {/* <Float>
-          <mesh position={[1, -3, -15]} scale={[2, 2, 2]}>
-            <sphereGeometry />
-            <MeshDistortMaterial
-              opacity={0.8}
-              transparent
-              distort={0.4}
-              speed={4}
-              color={"red"}
-            />
-          </mesh>
-        </Float>
-        <Float>
-          <mesh scale={[3, 3, 3]} position={[3, 1, -18]}>
-            <sphereGeometry />
-            <MeshDistortMaterial
-              opacity={0.8}
-              transparent
-              distort={1}
-              speed={5}
-              color="yellow"
-            />
-          </mesh>
-        </Float>
-        <Float>
-          <mesh scale={[1.4, 1.4, 1.4]} position={[-3, -1, -11]}>
-            <boxGeometry />
-            <MeshWobbleMaterial
-              opacity={0.8}
-              transparent
-              factor={1}
-              speed={5}
-              color={"blue"}
-            />
-          </mesh>
-        </Float>
-      */} </motion.group>
       <Projects />
     </>
   );

@@ -1,9 +1,96 @@
-import { useGLTF, useTexture, useVideoTexture, useAnimations } from "@react-three/drei";
+
+
+
+//down here is og working with still option to adjust camera 
+
+import { useGLTF, useTexture, useVideoTexture, useAnimations, MeshTransmissionMaterial, Html  } from "@react-three/drei";
 import { useFrame } from "@react-three/fiber";
 import { animate, useMotionValue } from "framer-motion";
-import { motion } from "framer-motion-3d";
-import React, { useEffect, useRef } from "react";
+import { useEffect, useRef } from "react";
 import * as THREE from "three";
+
+
+
+
+function GlassComponent({ geometry, position, rotation, scale }) {
+  //  <GlassComponent
+  //       geometry={nodes.Door_Front_House_material_0.geometry}
+  //       position={[400, 200, 0]}
+  //       rotation={[-Math.PI / 2, 0, 0]}
+  //       scale={100}
+  //     /> for the office component if you need to redo npx gltfjsx
+  return (
+    <mesh geometry={geometry} position={position} rotation={rotation} scale={scale}>
+      {/* The black frame overlay */}
+
+      <mesh geometry={geometry}>
+        <meshBasicMaterial color="black" wireframe={true} />
+      </mesh>
+      {/* <MeshTransmissionMaterial
+        color="#e0f7ff"
+        transmission={1}
+        roughness={0.1}
+        thickness={0.4}
+        chromaticAberration={0.02}
+      /> */}
+            {/* The black frame overlay */}
+
+       <MeshTransmissionMaterial
+          color="#444444"               // dark gray-blue tone (lighter than #222)
+          transmission={0.8}            // more light passes through (less opaque)
+          roughness={0.45}              // moderate softness
+          thickness={0.5}               // still has density
+          ior={1.3}                     // slightly softer reflections
+          anisotropy={0.05}
+          chromaticAberration={0.005}
+        />
+    </mesh>
+  );
+}
+
+
+
+
+
+
+
+
+
+
+const OverlayItem = ({
+  className = "",
+  title,
+  description,
+  price,
+  bgColor,
+  ...props
+}) => {
+  // const [currentPage] = useAtom(currentPageAtom);
+  return (
+    <Html
+      transform
+      distanceFactor={5}
+      center
+      className={`w-64 h-48 rounded-md overflow-hidden 
+      transition-opacity duration-1000 ${className}`}
+      {...props}
+    >
+      <div className="bg-white bg-opacity-90 backdrop-blur-2xl text-sm p-2 w-full">
+        <h2 className="font-bold">{title}</h2>
+        <p>{description}</p>
+      </div>
+      <button
+        className={`${bgColor} hover:bg-opacity-50 transition-colors duration-500 px-4 py-2 font-bold text-white w-full text-xs`}
+      >
+        Add to cart ${price}
+      </button>
+    </Html>
+  );
+};
+
+
+
+
 
 export function Office(props) {
   const { section } = props;
@@ -27,6 +114,8 @@ export function Office(props) {
     transparent: true,
     opacity: 0.42,
   });
+  
+
 
   const textureOpacity = useMotionValue(0);
   const glassTextureOpacity = useMotionValue(0);
@@ -36,126 +125,10 @@ export function Office(props) {
     animate(textureOpacity, section === 0 ? 1 : 0);
     animate(glassTextureOpacity, section === 0 ? 0.42 : 0);
     console.log(actions);
-    /* const startAnimations = () => {
-      Object.keys(actions).forEach((key) => {
-        const action = actions[key];
-        if (key.includes("logoAnimation")) {
-
-          action.reset().play(); 
-          action.clampWhenFinished = true;
-        }
-      });
-    };
-  
-    if (section === 0) {
-      startAnimations(); 
-    } */
-     
-/*      const startAnimations = () => {
-   Object.keys(actions).forEach((key) => {
-     const action = actions[key];
-
-     if (key.includes("logoAnimation")) {
-       // Reset and play the animation from the start
-       action.reset();
-
-       // Clamp the animation to stop exactly at the end frame
-       action.clampWhenFinished = true;
-
-       // Play only once (LoopOnce)
-       action.setLoop(THREE.LoopOnce, 1);
-
-       // Make sure playback is at normal speed
-       action.setEffectiveTimeScale(1);
-       action.setEffectiveWeight(1);
-
-       // Remove any fade or warp effects
-       action.stopFading();
-       action.stopWarping();
-
-       // Play the animation
-       action.play();
-
-      // Optional: add a listener or timeout to handle post-animation logic
-       // For example, if you need to clean up after a certain time
-       const duration = action.getClip().duration;
-       setTimeout(() => {
-         action.stop();
-         action.reset(); // Ready for next play
-       }, duration * 1000); // convert to milliseconds
-     }
-   });
- }; */
- const loopCounts = {};
- const startAnimations = () => {
-   Object.keys(actions).forEach((key) => {
-     const action = actions[key];
-if (key.includes("logoAnimation")) {
-      // Initialize loop count
-      loopCounts[key] = 1;
-
-      const playOnce = () => {
-        action.reset();
-        action.clampWhenFinished = true;
-        action.setLoop(THREE.LoopOnce, 1);
-        action.setEffectiveTimeScale(1);
-        action.setEffectiveWeight(1);
-        action.stopFading();
-        action.stopWarping();
-        action.play();
-      };
-
-      // Remove any previous listener to avoid stacking
-      mixer.removeEventListener('finished');
-
-      mixer.addEventListener('finished', (e) => {
-        if (e.action === action) {
-          loopCounts[key] += 1;
-          if (loopCounts[key] <= 2) {
-            playOnce();
-          }
-        }
-      });
-
-      playOnce(); // Start the first cycle
-    }
-  });
-};
-       if (section === 0) {
-         startAnimations();
-       }
-    
-       return () => {
-         // Clean up the event listener to avoid memory leaks
-         Object.keys(actions).forEach((key) => {
-           const action = actions[key];
-           if (action.onFinish) {
-             action.onFinish = null;
-           }
-         });
-       };
+ 
    }, [section]);
 
 
-/*   if (section !== 0) return;
-
-  Object.values(actions).forEach((action) => {
-    action.reset();
-    action.clampWhenFinished = false;         // Don't clamp at last frame
-    action.setLoop(THREE.LoopRepeat, Infinity);
-    action.setEffectiveTimeScale(1);
-    action.setEffectiveWeight(1);
-    action.play();
-  });
-
-  return () => {
-    Object.values(actions).forEach((action) => {
-      action.stop();
-      action.reset();
-    });
-  };
-}, [section, actions]);
- */
 
   useFrame(() => {
     textureMaterial.opacity = textureOpacity.get();
@@ -172,288 +145,219 @@ const ZoomCamera = ({ isFirstSlide }) => {
   return null;
 };
   return (
-    <group ref={group} {...props} dispose={null} position={[0, 4.5, 6]}  rotation={[0, 5.5, 0.4]} scale={0.5}>
+    <group ref={group} {...props} dispose={null} position={[-10, -5, -3]}  rotation={[0, 0, 0]} scale={1}>
+      <group scale={0.01}>
+            <GlassComponent
+        geometry={nodes.Door_Front_House_material_0001.geometry}
+        position={[400, 200, 0]}
+        rotation={[-Math.PI / 2, 0, 0]}
+        scale={100}
+       />
+                 <GlassComponent
+        geometry={nodes.Window_front_2nd_floor002_House_material_0.geometry}
+        position={[400, 200, 0]}
+        rotation={[-Math.PI / 2, 0, 0]}
+        scale={100}
+       />
+                 <GlassComponent
+        geometry={nodes.Window_front_2nd_floor001_House_material_0001.geometry}
+        position={[400, 200, 0]}
+        rotation={[-Math.PI / 2, 0, 0]}
+        scale={100}
+       />
+        <GlassComponent
+        geometry={nodes.Window_front_2nd_floor_House_material_0001.geometry}
+        position={[400, 200, 0]}
+        rotation={[-Math.PI / 2, 0, 0]}
+        scale={100}
+       />
+         <GlassComponent
+        geometry={nodes.Window_front_1st_floor_House_material_0001.geometry}
+        position={[400, 200, 10]}
+        rotation={[-Math.PI / 2, 0, 0]}
+                scale={100}
+
+       />
+<GlassComponent
+        geometry={nodes.Balcony_Glass_door_Upper004_House_material_0001.geometry}
+        position={[950, 200, -390]}
+        rotation={[-Math.PI / 2, 0, -Math.PI / 2]}
+                scale={100}
+
+       />
+       <GlassComponent
+        geometry={nodes.Balcony_Glass_door_Upper005_House_material_0001.geometry}
+        position={[950, 200, -20]}
+        rotation={[-Math.PI / 2, 0, -Math.PI / 2]}
+                scale={100}
+
+        
+       />
+       {/* <GlassComponent
+        geometry={nodes.Balcony_rail_glass002_House_material_0.geometry}
+        position={[400, 200, 0]}
+        rotation={[-Math.PI / 2, 0, 0]}
+        scale={100}
+       /> */}
+       {/* <GlassComponent
+        geometry={nodes.Balcony_rail_glass003_House_material_0.geometry}
+        position={[400, 200, 0]}
+        rotation={[-Math.PI / 2, 0, 0]}
+        scale={100}
+       /> */}
+     <GlassComponent
+        geometry={nodes.Door_side_House_material_0001.geometry}
+        position={[400, 200, 0]}
+        rotation={[-Math.PI / 2, 0, 0]}
+        scale={100}
+       />
+       <GlassComponent
+        geometry={nodes.Garage_door_House_material_0001.geometry}
+        position={[0, 200, 0]}
+        rotation={[-Math.PI / 2, 0, 0]}
+        scale={100}
+       />
+ 
+       <group position={[950.267, 199.77, -398.613]} rotation={[-Math.PI / 2, 0, -Math.PI / 2]} scale={100}>
+          <mesh geometry={nodes.Balcony_Glass_door_Upper004_House_material_0.geometry} material={materials.House_material} />
+          {/* <mesh geometry={nodes.Balcony_Glass_door_Upper004_House_material_0001.geometry} material={materials.House_material} position={[0.012, -0.051, 0]} /> */}
+        </group>
+        <group position={[950.267, 199.77, -28.613]} rotation={[-Math.PI / 2, 0, -Math.PI / 2]} scale={100}>
+          <mesh geometry={nodes.Balcony_Glass_door_Upper005_House_material_0.geometry} material={materials.House_material} />
+          {/* <mesh geometry={nodes.Balcony_Glass_door_Upper005_House_material_0001.geometry} material={materials.House_material} position={[0.012, -0.051, 0]} /> */}
+        </group>
+        <group position={[0.488, 406.956, 204.005]} rotation={[-Math.PI / 2, 0, 0]} scale={100}>
+          <mesh geometry={nodes.Balcony_rail_glass_House_material_0.geometry} material={materials.House_material} />
+          {/* <mesh geometry={nodes.Balcony_rail_glass002_House_material_0.geometry} material={materials.House_material} /> */}
+        </group>
+        <group position={[-228.117, 406.956, 1.194]} rotation={[-Math.PI / 2, 0, Math.PI / 2]} scale={100}>
+          <mesh geometry={nodes.Balcony_rail_glass001_House_material_0.geometry} material={materials.House_material} />
+
+            <OverlayItem
+              rotation-x={Math.PI / 2}   // <-- fix sideways tilt
+              rotation-y={0}             // adjust if needed
+              rotation-z={0}              
+              position-x={1.2}
+              position-z={1.2}
+              position-y={-0.1}
+              title={"Deck cleaning"}
+              description={"Scrib scrub"}
+              price={"250-500"}
+              bgColor={"bg-yellow-500"}
+              className={"transition delay-1000"}
+            />
       
-      <group name="Scene">
-         <group name="Cylinder004" position={[-3.693, -4.155, -4.282]}>
-          <mesh name="Cylinder111" geometry={nodes.Cylinder111.geometry} material={textureMaterial} />
-          <mesh name="Cylinder111_1" geometry={nodes.Cylinder111_1.geometry} material={textureMaterial} />
-          <mesh name="Cylinder111_2" geometry={nodes.Cylinder111_2.geometry} material={textureMaterial} />
+          {/* <mesh geometry={nodes.Balcony_rail_glass003_House_material_0.geometry} material={materials.House_material} rotation={[0, 0, -Math.PI]} /> */}
         </group>
-        <group name="Cylinder007" position={[-3.693, -4.155, -4.349]}>
-          <mesh name="Cylinder168" geometry={nodes.Cylinder168.geometry} material={textureMaterial} />
-          <mesh name="Cylinder168_1" geometry={nodes.Cylinder168_1.geometry} material={textureMaterial} />
-          <mesh name="Cylinder168_2" geometry={nodes.Cylinder168_2.geometry} material={textureMaterial} />
+        <group position={[400, 200, 0]} rotation={[-Math.PI / 2, 0, 0]} scale={100}>
+          <mesh geometry={nodes.Door_Front_House_material_0.geometry} material={materials.House_material} />
+          {/* <mesh geometry={nodes.Door_Front_House_material_0001.geometry} material={materials.House_material} /> */}
         </group>
-        <group name="Cylinder057" position={[-3.693, -4.155, -4.416]}>
-          <mesh name="Cylinder169" geometry={nodes.Cylinder169.geometry} material={textureMaterial} />
-          <mesh name="Cylinder169_1" geometry={nodes.Cylinder169_1.geometry} material={textureMaterial} />
-          <mesh name="Cylinder169_2" geometry={nodes.Cylinder169_2.geometry} material={textureMaterial} />
+        <group position={[400, 200, 0]} rotation={[-Math.PI / 2, 0, 0]} scale={100}>
+          <mesh geometry={nodes.Door_side_House_material_0.geometry} material={materials.House_material} />
+          {/* <mesh geometry={nodes.Door_side_House_material_0001.geometry} material={materials.House_material} /> */}
         </group>
-        <group name="Cylinder058" position={[-3.693, -4.155, -4.484]}>
-          <mesh name="Cylinder170" geometry={nodes.Cylinder170.geometry} material={textureMaterial} />
-          <mesh name="Cylinder170_1" geometry={nodes.Cylinder170_1.geometry} material={textureMaterial} />
-          <mesh name="Cylinder170_2" geometry={nodes.Cylinder170_2.geometry} material={textureMaterial} />
+        <group position={[0, 200, 0]} rotation={[-Math.PI / 2, 0, 0]} scale={100}>
+          <mesh geometry={nodes.Garage_door_House_material_0.geometry} material={materials.House_material} />
+          {/* <mesh geometry={nodes.Garage_door_House_material_0001.geometry} material={materials.House_material} /> */}
         </group>
-        <group name="Cylinder059" position={[-3.693, -4.155, -4.551]}>
-          <mesh name="Cylinder171" geometry={nodes.Cylinder171.geometry} material={textureMaterial} />
-          <mesh name="Cylinder171_1" geometry={nodes.Cylinder171_1.geometry} material={textureMaterial} />
-          <mesh name="Cylinder171_2" geometry={nodes.Cylinder171_2.geometry} material={textureMaterial} />
+        <group position={[400, 200, 8.401]} rotation={[-Math.PI / 2, 0, 0]} scale={100}>
+          <mesh geometry={nodes.Window_front_1st_floor_House_material_0.geometry} material={materials.House_material} />
+          {/* <mesh geometry={nodes.Window_front_1st_floor_House_material_0001.geometry} material={materials.House_material} /> */}
         </group>
-        <group name="Cylinder060" position={[-3.693, -4.155, -4.618]}>
-          <mesh name="Cylinder172" geometry={nodes.Cylinder172.geometry} material={textureMaterial} />
-          <mesh name="Cylinder172_1" geometry={nodes.Cylinder172_1.geometry} material={textureMaterial} />
-          <mesh name="Cylinder172_2" geometry={nodes.Cylinder172_2.geometry} material={textureMaterial} />
+        <group position={[400, 200, 0]} rotation={[-Math.PI / 2, 0, 0]} scale={100}>
+          <mesh geometry={nodes.Window_front_2nd_floor_House_material_0.geometry} material={materials.House_material} />
+          {/* <mesh geometry={nodes.Window_front_2nd_floor_House_material_0001.geometry} material={materials.House_material} /> */}
         </group>
-        <group name="Cylinder061" position={[-3.693, -4.155, -4.685]}>
-          <mesh name="Cylinder173" geometry={nodes.Cylinder173.geometry} material={textureMaterial} />
-          <mesh name="Cylinder173_1" geometry={nodes.Cylinder173_1.geometry} material={textureMaterial} />
-          <mesh name="Cylinder173_2" geometry={nodes.Cylinder173_2.geometry} material={textureMaterial} />
+        <group position={[400, 200, 0]} rotation={[-Math.PI / 2, 0, 0]} scale={100}>
+          <mesh geometry={nodes.Window_front_2nd_floor001_House_material_0.geometry} material={materials.House_material} />
+          {/* <mesh geometry={nodes.Window_front_2nd_floor001_House_material_0001.geometry} material={materials.House_material} /> */}
         </group>
-        <group name="Cylinder062" position={[-3.693, -4.155, -4.753]}>
-          <mesh name="Cylinder174" geometry={nodes.Cylinder174.geometry} material={textureMaterial} />
-          <mesh name="Cylinder174_1" geometry={nodes.Cylinder174_1.geometry} material={textureMaterial} />
-          <mesh name="Cylinder174_2" geometry={nodes.Cylinder174_2.geometry} material={textureMaterial} />
+        <mesh geometry={nodes._Roof_Main_House_material_0.geometry} material={materials.newRoof} position={[450, 709.989, -200]} rotation={[-Math.PI / 2, 0, 0]} scale={100} />
+        <mesh geometry={nodes.Back_wall_2nd_floor_House_material_0.geometry} material={materials.House_material} position={[400, 200, 0]} rotation={[-Math.PI / 2, 0, 0]} scale={100} />
+        <mesh geometry={nodes.Balcony_Glass_door_House_material_0.geometry} material={materials.House_material} position={[400, 200, 0]} rotation={[-Math.PI / 2, 0, 0]} scale={100} />
+        <mesh geometry={nodes.Balcony_Glass_door_2_House_material_0.geometry} material={materials.House_material} position={[402.152, 200, 0]} rotation={[-Math.PI / 2, 0, 0]} scale={100} />
+        <mesh geometry={nodes.Balcony_Glass_door_2_Upper_House_material_0.geometry} material={materials.House_material} position={[400, 200, 0]} rotation={[-Math.PI / 2, 0, 0]} scale={100} />
+        <mesh geometry={nodes.Balcony_Glass_door_2001_House_material_0.geometry} material={materials.House_material} position={[400, 200, 0]} rotation={[-Math.PI / 2, 0, 0]} scale={100} />
+        <mesh geometry={nodes.Balcony_Glass_door_Upper_House_material_0.geometry} material={materials.House_material} position={[400, 200, 0]} rotation={[-Math.PI / 2, 0, 0]} scale={100} />
+        <mesh geometry={nodes.Balcony_Glass_door_Upper001_House_material_0.geometry} material={materials.House_material} position={[454.801, 182.653, -597.463]} rotation={[-Math.PI / 2, 0, 0]} scale={100} />
+        <mesh geometry={nodes.Balcony_Glass_door_Upper002_House_material_0.geometry} material={materials.House_material} position={[-3.284, 499.399, -602.541]} rotation={[-Math.PI / 2, 0, 0]} scale={100} />
+        <mesh geometry={nodes.Balcony_Glass_door_Upper003_House_material_0.geometry} material={materials.House_material} position={[-1.15, 199.77, -600.006]} rotation={[-Math.PI / 2, 0, 0]} scale={100} />
+        <mesh geometry={nodes.Balcony_rail_House_material_0.geometry} material={materials.House_material} position={[3.947, 350.037, 204.274]} rotation={[-Math.PI / 2, 0, 0]} scale={100} />
+        <mesh geometry={nodes.Balcony_rail_1_House_material_0.geometry} material={materials.House_material} position={[149.634, 350.037, 204.274]} rotation={[-Math.PI / 2, 0, 0]} scale={100} />
+        <mesh geometry={nodes.Balcony_rail_2_House_material_0.geometry} material={materials.House_material} position={[-149.213, 350.037, 204.274]} rotation={[-Math.PI / 2, 0, 0]} scale={100} />
+        <mesh geometry={nodes.Balcony_rail_3_House_material_0.geometry} material={materials.House_material} position={[-227.303, 350.037, 1.188]} rotation={[-Math.PI / 2, 0, 0]} scale={100} />
+        <mesh geometry={nodes.Balcony_rail_4_House_material_0.geometry} material={materials.House_material} position={[-227.303, 350.037, 170.973]} rotation={[-Math.PI / 2, 0, 0]} scale={100} />
+        <mesh geometry={nodes.Balcony_rail_5_House_material_0.geometry} material={materials.House_material} position={[-227.303, 350.037, -172.734]} rotation={[-Math.PI / 2, 0, 0]} scale={100} />
+        <mesh geometry={nodes.Balcony_trim_House_material_0.geometry} material={materials.House_material} position={[0, 200, 0]} rotation={[-Math.PI / 2, 0, 0]} scale={100} />
+        <mesh geometry={nodes.Balcony_wall_1_House_material_0.geometry} material={materials.House_material} position={[0, 545.015, -200]} rotation={[-Math.PI / 2, 0, 0]} scale={100} />
+        <mesh geometry={nodes.Balcony_wall_2_House_material_0.geometry} material={materials.House_material} position={[400, 200, 0]} rotation={[-Math.PI / 2, 0, 0]} scale={100} />
+        <mesh geometry={nodes.Balcony_wood_floor_House_material_0.geometry} material={materials.House_material} position={[0, 200, 0]} rotation={[-Math.PI / 2, 0, 0]} scale={100} />
+        <mesh geometry={nodes.Driveway_House_material_0.geometry} material={materials.House_material} position={[-4.128, 0, 305.314]} rotation={[-Math.PI / 2, 0, 0]} scale={100} />
+        <mesh geometry={nodes.Driveway001_House_material_0.geometry} material={materials.House_material} position={[-162.113, -13.119, 752.987]} rotation={[-Math.PI / 2, 0, 0]} scale={100} />
+        <mesh geometry={nodes.Driveway002_House_material_0.geometry} material={materials.House_material} position={[206.757, -13.119, 752.987]} rotation={[-Math.PI / 2, 0, 0]} scale={100} />
+        <mesh geometry={nodes.Fence_House_material_0.geometry} material={materials.House_material} position={[-814.541, 174.924, 1.036]} rotation={[-Math.PI / 2, 0, 0]} scale={100} />
+        <mesh geometry={nodes.Fence_poles_House_material_0.geometry} material={materials.House_material} position={[-814.53, 210.163, 1091.849]} rotation={[-Math.PI / 2, 0, 0]} scale={100} />
+        <mesh geometry={nodes.Fence_poles001_House_material_0.geometry} material={materials.House_material} position={[1257.63, 137.628, 86.034]} rotation={[-Math.PI / 2, 0, 0]} scale={100} />
+        <mesh geometry={nodes.Fence_poles002_House_material_0.geometry} material={materials.House_material} position={[224.22, 137.628, -919.778]} rotation={[-Math.PI / 2, 0, Math.PI / 2]} scale={100} />
+        <mesh geometry={nodes.Fence001_House_material_0.geometry} material={materials.House_material} position={[1257.619, 95.703, 86.354]} rotation={[-Math.PI / 2, 0, 0]} scale={100} />
+        <mesh geometry={nodes.Fence002_House_material_0.geometry} material={materials.House_material} position={[224.209, 95.703, -919.458]} rotation={[-Math.PI / 2, 0, Math.PI / 2]} scale={100} />
+        <mesh geometry={nodes.Front_fence_House_material_0.geometry} material={materials.House_material} rotation={[-Math.PI / 2, 0, 0]} scale={100} />
+        <mesh geometry={nodes.Front_fence_2_House_material_0.geometry} material={materials.House_material} position={[535.435, 27.254, 1130.915]} rotation={[-Math.PI / 2, 0, 0]} scale={100} />
+        <mesh geometry={nodes.Front_lawn_design_House_material_0.geometry} material={materials.House_material} position={[575.645, 3.672, 789.029]} rotation={[-Math.PI / 2, 0, 0]} scale={100} />
+        <mesh geometry={nodes.Garden_Ground_Material_0.geometry} material={materials.Ground_Material} position={[-227.216, -3.571, -56.219]} rotation={[-Math.PI / 2, 0, 0]} scale={100} />
+        <mesh geometry={nodes.Garden001_Ground_Material_0.geometry} material={materials.Ground_Material} position={[527.892, -3.677, 429.819]} rotation={[-Math.PI / 2, 0, 0]} scale={100} />
+        <mesh geometry={nodes.Grage_wall__House_material_0.geometry} material={materials.House_material} position={[0, 200, 0]} rotation={[-Math.PI / 2, 0, 0]} scale={100} />
+        <mesh geometry={nodes.Grass_Grass_Material_0.geometry} material={materials.Grass_Material} rotation={[-Math.PI / 2, 0, 0]} scale={100} />
+        <mesh geometry={nodes.Gutter_House_material_0.geometry} material={materials.House_material} position={[400, 200, 0]} rotation={[-Math.PI / 2, 0, 0]} scale={100} />
+        <mesh geometry={nodes.Gutter_drain_big_House_material_0.geometry} material={materials.House_material} position={[400, 200, 0]} rotation={[-Math.PI / 2, 0, 0]} scale={100} />
+        <mesh geometry={nodes.Gutter_drain_small_House_material_0.geometry} material={materials.House_material} position={[400, 200, 0]} rotation={[-Math.PI / 2, 0, 0]} scale={100} />
+        <mesh geometry={nodes.House_main_bottom_House_material_0.geometry} material={materials.House_material} position={[400, 200, 8.401]} rotation={[-Math.PI / 2, 0, 0]} scale={100} />
+        <mesh geometry={nodes.House_main_top_House_material_0.geometry} material={materials.House_material} position={[400, 200, 0]} rotation={[-Math.PI / 2, 0, 0]} scale={100} />
+        <mesh geometry={nodes.Path_House_material_0.geometry} material={materials.House_material} position={[-308.445, 0, -458.168]} rotation={[-Math.PI / 2, 0, 0]} scale={100} />
+        <mesh geometry={nodes.Path001_House_material_0.geometry} material={materials.House_material} position={[-308.445, 0, -458.168]} rotation={[-Math.PI / 2, 0, 0]} scale={100} />
+        <mesh geometry={nodes.Path002_House_material_0.geometry} material={materials.House_material} position={[-308.445, 0, -458.168]} rotation={[-Math.PI / 2, 0, 0]} scale={100} />
+        <mesh geometry={nodes.Pine_Bush_texture_0.geometry} material={materials.Bush_texture} position={[-273.902, 88.13, -284.533]} rotation={[-Math.PI / 2, 0, 0]} scale={100} />
+        <mesh geometry={nodes.Pine_2_Bush_texture_0.geometry} material={materials.Bush_texture} position={[-195.675, 17.79, 1117.777]} rotation={[-Math.PI / 2, 0, 0]} scale={100} />
+        <mesh geometry={nodes.Pine_3_Bush_texture_0.geometry} material={materials.Bush_texture} position={[241.193, 17.79, 1117.777]} rotation={[-Math.PI / 2, 0, 0]} scale={100} />
+        <mesh geometry={nodes.Pine001_Bush_texture_0.geometry} material={materials.Bush_texture} position={[-693.076, 185.116, 128.914]} rotation={[-Math.PI / 2, 0, 0]} scale={100} />
+        <mesh geometry={nodes.Pine002_Bush_texture_0.geometry} material={materials.Bush_texture} position={[938.995, 185.116, -810.432]} rotation={[-Math.PI / 2, 0, 0]} scale={100} />
+        <mesh geometry={nodes.Pine003_Bush_texture_0.geometry} material={materials.Bush_texture} position={[1119.298, 214.967, 1002.216]} rotation={[-Math.PI / 2, 0, 0]} scale={100} />
+        <mesh geometry={nodes.Pine004_Bush_texture_0.geometry} material={materials.Bush_texture} position={[-519.526, 214.967, 983.236]} rotation={[-Math.PI / 2, 0, 0]} scale={100} />
+        <mesh geometry={nodes.Plant_1_Plant3_0.geometry} material={materials.Plant3} position={[-193.577, -6.586, 1045.817]} rotation={[-Math.PI / 2, 0, 0]} scale={100} />
+        <mesh geometry={nodes.Plant_2_Plant3_0.geometry} material={materials.Plant3} position={[243.292, -6.586, 1045.817]} rotation={[-Math.PI / 2, 0, 0]} scale={100} />
+        <mesh geometry={nodes.Plant_3_Plant3_0.geometry} material={materials.Plant3} position={[279.711, 30.6, 399.54]} rotation={[-Math.PI / 2, 0, 0]} scale={100} />
+        <mesh geometry={nodes.Plant_4_Plant3_0.geometry} material={materials.Plant3} position={[-253.745, 35.451, 260.801]} rotation={[-Math.PI / 2, 0, -0.306]} scale={100} />
+        <mesh geometry={nodes.Plant_4001_Plant3_0.geometry} material={materials.Plant3} position={[-683.364, 103.647, -785.771]} rotation={[-Math.PI / 2, 0, 0]} scale={100} />
+        <mesh geometry={nodes.Plant_4002_Plant3_0.geometry} material={materials.Plant3} position={[929.224, 64.978, 1043.531]} rotation={[-Math.PI / 2, 0, 0]} scale={100} />
+        <mesh geometry={nodes.Plant_4003_Plant3_0.geometry} material={materials.Plant3} position={[-721.595, 64.978, 988.766]} rotation={[-Math.PI / 2, 0, 0]} scale={100} />
+        <mesh geometry={nodes.Plant_4004_Plant3_0.geometry} material={materials.Plant3} position={[-625.912, 64.978, 838.016]} rotation={[-Math.PI / 2, 0, 0]} scale={100} />
+        <mesh geometry={nodes.Plant_4005_Plant3_0.geometry} material={materials.Plant3} position={[1161.17, 52.84, 801.259]} rotation={[-Math.PI / 2, 0, 0]} scale={100} />
+        <mesh geometry={nodes.Ref_house_House_material_0.geometry} material={materials.House_material} position={[400, 200, 0]} rotation={[-Math.PI / 2, 0, 0]} scale={100} />
+        <mesh geometry={nodes.Ref_house001_House_material_0.geometry} material={materials.House_material} position={[400, 200, 0]} rotation={[-Math.PI / 2, 0, 0]} scale={100} />
+        <mesh geometry={nodes.Ref_house002_House_material_0.geometry} material={materials.House_material} position={[400, 200, 0]} rotation={[-Math.PI / 2, 0, 0]} scale={100} />
+        <mesh geometry={nodes.Ref_house003_House_material_0.geometry} material={materials.House_material} position={[400, 200, 0]} rotation={[-Math.PI / 2, 0, 0]} scale={100} />
+        <mesh geometry={nodes.Ref_house004_House_material_0.geometry} material={materials.House_material} position={[400, 200, 0]} rotation={[-Math.PI / 2, 0, 0]} scale={100} />
+        <mesh geometry={nodes.Ref_house005_House_material_0.geometry} material={materials.House_material} position={[400, 200, 0]} rotation={[-Math.PI / 2, 0, 0]} scale={100} />
+        <mesh geometry={nodes.Ref_house006_House_material_0.geometry} material={materials.House_material} position={[400, 200, 0]} rotation={[-Math.PI / 2, 0, 0]} scale={100} />
+        <mesh geometry={nodes.Ref_house007_House_material_0.geometry} material={materials.House_material} position={[400, 200, 0]} rotation={[-Math.PI / 2, 0, 0]} scale={100} />
+        <mesh geometry={nodes.rocks_Rock_texture_0.geometry} material={materials.Rock_texture} position={[840.75, -4.967, 412.407]} rotation={[-Math.PI / 2, 0, 0]} scale={100} />
+        <mesh geometry={nodes.rocks001_Rock_texture_0.geometry} material={materials.Rock_texture} position={[-590.829, 12.965, 434.988]} rotation={[-Math.PI / 2, 0, 0]} scale={100} />
+        <mesh geometry={nodes.rocks002_Rock_texture_0.geometry} material={materials.Rock_texture} position={[-231.549, 1.286, -349.319]} rotation={[-Math.PI / 2, 0, 0]} scale={100} />
+        <mesh geometry={nodes.rocks003_Rock_texture_0.geometry} material={materials.Rock_texture} position={[-173.386, 12.965, 247.555]} rotation={[-Math.PI / 2, 0, 0]} scale={100} />
+        <mesh geometry={nodes.rocks004_Rock_texture_0.geometry} material={materials.Rock_texture} position={[1172.839, 12.965, -771.341]} rotation={[-Math.PI / 2, 0, 0]} scale={100} />
+        <mesh geometry={nodes.Roof_2_House_material_0.geometry} material={materials.newRoof} position={[400, 200, 0]} rotation={[-Math.PI / 2, 0, 0]} scale={100} />
+        <mesh geometry={nodes.Roof_3_House_material_0.geometry} material={materials.newRoof} position={[400, 200, 0]} rotation={[-Math.PI / 2, 0, 0]} scale={100} />
+        <mesh geometry={nodes.Roof_3001_House_material_0.geometry} material={materials.House_material} position={[400, 200, 0]} rotation={[-Math.PI / 2, 0, 0]} scale={100} />
+        <mesh geometry={nodes.Stone_pillar_House_material_0.geometry} material={materials.House_material} position={[-199.478, 46, 198.253]} rotation={[-Math.PI / 2, 0, 0]} scale={100} />
+        <mesh geometry={nodes.Stone_pillar_gate_House_material_0.geometry} material={materials.House_material} position={[-338.502, 43.966, 1129.598]} rotation={[-Math.PI / 2, 0, 0]} scale={100} />
+        <mesh geometry={nodes.Stone_pillar_gate001_House_material_0.geometry} material={materials.House_material} position={[404.712, 43.966, 1129.598]} rotation={[-Math.PI / 2, 0, 0]} scale={100} />
+        <mesh geometry={nodes.Stone_pillar001_House_material_0.geometry} material={materials.House_material} position={[200, 46, 198.253]} rotation={[-Math.PI / 2, 0, 0]} scale={100} />
+        <mesh geometry={nodes.Stone_pillar002_House_material_0.geometry} material={materials.House_material} position={[-199.478, 46, -200]} rotation={[-Math.PI / 2, 0, 0]} scale={100} />
+        <mesh geometry={nodes.Stone_pillar003_House_material_0.geometry} material={materials.House_material} position={[686.116, 46, 198.253]} rotation={[-Math.PI / 2, 0, 0]} scale={100} />
+        <mesh geometry={nodes.Window_front_2nd_floor002_House_material_0.geometry} material={materials.House_material} position={[450, 477.255, -595.358]} rotation={[-Math.PI / 2, 0, 0]} scale={100} />
+        <mesh geometry={nodes.Wood_panel_top_G_House_material_0.geometry} material={materials.House_material} position={[0, 200, 0]} rotation={[-Math.PI / 2, 0, 0]} scale={100} />
         </group>
-        <group name="Cylinder063" position={[-3.693, -4.155, -4.82]}>
-          <mesh name="Cylinder175" geometry={nodes.Cylinder175.geometry} material={textureMaterial} />
-          <mesh name="Cylinder175_1" geometry={nodes.Cylinder175_1.geometry} material={textureMaterial} />
-          <mesh name="Cylinder175_2" geometry={nodes.Cylinder175_2.geometry} material={textureMaterial} />
-        </group>
-        <group name="Cylinder064" position={[-3.693, -4.155, -4.887]}>
-          <mesh name="Cylinder176" geometry={nodes.Cylinder176.geometry} material={textureMaterial} />
-          <mesh name="Cylinder176_1" geometry={nodes.Cylinder176_1.geometry} material={textureMaterial} />
-          <mesh name="Cylinder176_2" geometry={nodes.Cylinder176_2.geometry} material={textureMaterial} />
-        </group>
-        <group name="Cylinder065" position={[-3.693, -4.155, -4.954]}>
-          <mesh name="Cylinder177" geometry={nodes.Cylinder177.geometry} material={textureMaterial} />
-          <mesh name="Cylinder177_1" geometry={nodes.Cylinder177_1.geometry} material={textureMaterial} />
-          <mesh name="Cylinder177_2" geometry={nodes.Cylinder177_2.geometry} material={textureMaterial} />
-        </group>
-        <group name="Cylinder066" position={[-3.693, -4.155, -5.022]}>
-          <mesh name="Cylinder178" geometry={nodes.Cylinder178.geometry} material={textureMaterial} />
-          <mesh name="Cylinder178_1" geometry={nodes.Cylinder178_1.geometry} material={textureMaterial} />
-          <mesh name="Cylinder178_2" geometry={nodes.Cylinder178_2.geometry} material={textureMaterial} />
-        </group>
-        <group name="Cylinder067" position={[-3.693, -4.155, -5.089]}>
-          <mesh name="Cylinder179" geometry={nodes.Cylinder179.geometry} material={textureMaterial} />
-          <mesh name="Cylinder179_1" geometry={nodes.Cylinder179_1.geometry} material={textureMaterial} />
-          <mesh name="Cylinder179_2" geometry={nodes.Cylinder179_2.geometry} material={textureMaterial} />
-        </group>
-        <group name="Cylinder068" position={[-3.693, -4.155, -5.156]}>
-          <mesh name="Cylinder180" geometry={nodes.Cylinder180.geometry} material={textureMaterial} />
-          <mesh name="Cylinder180_1" geometry={nodes.Cylinder180_1.geometry} material={textureMaterial} />
-          <mesh name="Cylinder180_2" geometry={nodes.Cylinder180_2.geometry} material={textureMaterial} />
-        </group>
-        <group name="Cylinder069" position={[-3.693, -4.155, -5.223]}>
-          <mesh name="Cylinder181" geometry={nodes.Cylinder181.geometry} material={textureMaterial} />
-          <mesh name="Cylinder181_1" geometry={nodes.Cylinder181_1.geometry} material={textureMaterial} />
-          <mesh name="Cylinder181_2" geometry={nodes.Cylinder181_2.geometry} material={textureMaterial} />
-        </group>
-        <group name="Cylinder070" position={[-3.693, -4.155, -5.291]}>
-          <mesh name="Cylinder182" geometry={nodes.Cylinder182.geometry} material={textureMaterial} />
-          <mesh name="Cylinder182_1" geometry={nodes.Cylinder182_1.geometry} material={textureMaterial} />
-          <mesh name="Cylinder182_2" geometry={nodes.Cylinder182_2.geometry} material={textureMaterial} />
-        </group>
-        <group name="Cylinder071" position={[-3.693, -4.155, -5.358]}>
-          <mesh name="Cylinder183" geometry={nodes.Cylinder183.geometry} material={textureMaterial} />
-          <mesh name="Cylinder183_1" geometry={nodes.Cylinder183_1.geometry} material={textureMaterial} />
-          <mesh name="Cylinder183_2" geometry={nodes.Cylinder183_2.geometry} material={textureMaterial} />
-        </group>
-        <group name="Cylinder072" position={[-3.693, -4.155, -5.425]}>
-          <mesh name="Cylinder184" geometry={nodes.Cylinder184.geometry} material={textureMaterial} />
-          <mesh name="Cylinder184_1" geometry={nodes.Cylinder184_1.geometry} material={textureMaterial} />
-          <mesh name="Cylinder184_2" geometry={nodes.Cylinder184_2.geometry} material={textureMaterial} />
-        </group>
-        <group name="Cylinder073" position={[-3.693, -4.155, -5.492]}>
-          <mesh name="Cylinder185" geometry={nodes.Cylinder185.geometry} material={textureMaterial} />
-          <mesh name="Cylinder185_1" geometry={nodes.Cylinder185_1.geometry} material={textureMaterial} />
-          <mesh name="Cylinder185_2" geometry={nodes.Cylinder185_2.geometry} material={textureMaterial} />
-        </group>
-        <group name="Cylinder074" position={[-3.693, -4.155, -5.56]}>
-          <mesh name="Cylinder186" geometry={nodes.Cylinder186.geometry} material={textureMaterial} />
-          <mesh name="Cylinder186_1" geometry={nodes.Cylinder186_1.geometry} material={textureMaterial} />
-          <mesh name="Cylinder186_2" geometry={nodes.Cylinder186_2.geometry} material={textureMaterial} />
-        </group>
-        <group name="Cylinder075" position={[-3.693, -4.155, -5.627]}>
-          <mesh name="Cylinder187" geometry={nodes.Cylinder187.geometry} material={textureMaterial} />
-          <mesh name="Cylinder187_1" geometry={nodes.Cylinder187_1.geometry} material={textureMaterial} />
-          <mesh name="Cylinder187_2" geometry={nodes.Cylinder187_2.geometry} material={textureMaterial} />
-        </group>
-        <group name="Cylinder076" position={[-3.693, -4.155, -5.694]}>
-          <mesh name="Cylinder188" geometry={nodes.Cylinder188.geometry} material={textureMaterial} />
-          <mesh name="Cylinder188_1" geometry={nodes.Cylinder188_1.geometry} material={textureMaterial} />
-          <mesh name="Cylinder188_2" geometry={nodes.Cylinder188_2.geometry} material={textureMaterial} />
-        </group>
-        <group name="Cylinder077" position={[-3.693, -4.155, -5.761]}>
-          <mesh name="Cylinder189" geometry={nodes.Cylinder189.geometry} material={textureMaterial} />
-          <mesh name="Cylinder189_1" geometry={nodes.Cylinder189_1.geometry} material={textureMaterial} />
-          <mesh name="Cylinder189_2" geometry={nodes.Cylinder189_2.geometry} material={textureMaterial} />
-        </group>
-        <group name="Cylinder078" position={[-3.693, -4.155, -5.829]}>
-          <mesh name="Cylinder190" geometry={nodes.Cylinder190.geometry} material={textureMaterial} />
-          <mesh name="Cylinder190_1" geometry={nodes.Cylinder190_1.geometry} material={textureMaterial} />
-          <mesh name="Cylinder190_2" geometry={nodes.Cylinder190_2.geometry} material={textureMaterial} />
-        </group>
-        <group name="Cylinder079" position={[-3.693, -4.155, -5.896]}>
-          <mesh name="Cylinder191" geometry={nodes.Cylinder191.geometry} material={textureMaterial} />
-          <mesh name="Cylinder191_1" geometry={nodes.Cylinder191_1.geometry} material={textureMaterial} />
-          <mesh name="Cylinder191_2" geometry={nodes.Cylinder191_2.geometry} material={textureMaterial} />
-        </group>
-        <group name="Cylinder080" position={[-3.693, -4.155, -5.963]}>
-          <mesh name="Cylinder192" geometry={nodes.Cylinder192.geometry} material={textureMaterial} />
-          <mesh name="Cylinder192_1" geometry={nodes.Cylinder192_1.geometry} material={textureMaterial} />
-          <mesh name="Cylinder192_2" geometry={nodes.Cylinder192_2.geometry} material={textureMaterial} />
-        </group>
-        <group name="Cylinder081" position={[-3.693, -4.155, -6.03]}>
-          <mesh name="Cylinder193" geometry={nodes.Cylinder193.geometry} material={textureMaterial} />
-          <mesh name="Cylinder193_1" geometry={nodes.Cylinder193_1.geometry} material={textureMaterial} />
-          <mesh name="Cylinder193_2" geometry={nodes.Cylinder193_2.geometry} material={textureMaterial} />
-        </group>
-        <group name="Cylinder082" position={[-3.693, -4.155, -6.098]}>
-          <mesh name="Cylinder194" geometry={nodes.Cylinder194.geometry} material={textureMaterial} />
-          <mesh name="Cylinder194_1" geometry={nodes.Cylinder194_1.geometry} material={textureMaterial} />
-          <mesh name="Cylinder194_2" geometry={nodes.Cylinder194_2.geometry} material={textureMaterial} />
-        </group>
-        <group name="Cylinder083" position={[-3.693, -4.155, -6.165]}>
-          <mesh name="Cylinder195" geometry={nodes.Cylinder195.geometry} material={textureMaterial} />
-          <mesh name="Cylinder195_1" geometry={nodes.Cylinder195_1.geometry} material={textureMaterial} />
-          <mesh name="Cylinder195_2" geometry={nodes.Cylinder195_2.geometry} material={textureMaterial} />
-        </group>
-        <mesh name="Vert" geometry={nodes.Vert.geometry} material={textureMaterial} />
-        <mesh name="Cube005" geometry={nodes.Cube005.geometry} material={textureMaterial} />
-        <mesh name="deckrailing00001" geometry={nodes.deckrailing00001.geometry} material={textureMaterial} />
-        <mesh name="deckrailing00002" geometry={nodes.deckrailing00002.geometry} material={textureMaterial} />
-        <mesh name="deckrailing00003" geometry={nodes.deckrailing00003.geometry} material={textureMaterial} />
-        <mesh name="deckrailing00004" geometry={nodes.deckrailing00004.geometry} material={textureMaterial} />
-        <mesh name="deckrailing00005" geometry={nodes.deckrailing00005.geometry} material={textureMaterial} />
-        <mesh name="deckrailing00006" geometry={nodes.deckrailing00006.geometry} material={textureMaterial} />
-        <mesh name="deck001" geometry={nodes.deck001.geometry} material={textureMaterial} />
-        <mesh name="deckrailing00" geometry={nodes.deckrailing00.geometry} material={textureMaterial} />
-        <mesh name="deckrailing001" geometry={nodes.deckrailing001.geometry} material={textureMaterial} />
-        <mesh name="topRail000" geometry={nodes.topRail000.geometry} material={textureMaterial} />
-        <mesh name="topRail001" geometry={nodes.topRail001.geometry} material={textureMaterial} />
-        <mesh name="topRail002" geometry={nodes.topRail002.geometry} material={textureMaterial} />
-        <mesh name="topRail006" geometry={nodes.topRail006.geometry} material={textureMaterial} />
-        <mesh name="stairs" geometry={nodes.stairs.geometry} material={textureMaterial} />
-        <mesh name="topRail001001" geometry={nodes.topRail001001.geometry} material={textureMaterial} />
-        <mesh name="Plane005" geometry={nodes.Plane005.geometry} material={textureMaterial} />
-        <mesh name="Plane006" geometry={nodes.Plane006.geometry} material={textureMaterial} />
-        <mesh name="Plane007" geometry={nodes.Plane007.geometry} material={textureMaterial} />
-        <mesh name="Plane013" geometry={nodes.Plane013.geometry} material={textureMaterial} />
-        <mesh name="Plane016" geometry={nodes.Plane016.geometry} material={textureMaterial} />
-        <mesh name="Plane017" geometry={nodes.Plane017.geometry} material={textureMaterial} />
-        <mesh name="Plane008" geometry={nodes.Plane008.geometry} material={textureMaterial} />
-        <group name="building">
-          <mesh name="Cube009" geometry={nodes.Cube009.geometry} material={textureMaterial} />
-          <mesh name="Cube009_1" geometry={nodes.Cube009_1.geometry} material={textureMaterial} />
-          <mesh name="Cube009_2" geometry={nodes.Cube009_2.geometry} material={textureMaterial} />
-          <mesh name="Cube009_3" geometry={nodes.Cube009_3.geometry} material={textureMaterial} />
-          <mesh name="Cube009_4" geometry={nodes.Cube009_4.geometry} material={textureMaterial} />
-        </group>
-        <mesh name="door" geometry={nodes.door.geometry} material={textureMaterial} />
-        <group name="cielingBuilding">
-          <mesh name="Cube012" geometry={nodes.Cube012.geometry} material={textureMaterial} />
-          <mesh name="Cube012_1" geometry={nodes.Cube012_1.geometry} material={textureMaterial} />
-          <mesh name="Cube012_2" geometry={nodes.Cube012_2.geometry} material={textureMaterial} />
-          <mesh name="Cube012_3" geometry={nodes.Cube012_3.geometry} material={textureMaterial} />
-        </group>
-        <mesh name="doorHandle" geometry={nodes.doorHandle.geometry} material={textureMaterial} />
-        <mesh name="Plane" geometry={nodes.Plane.geometry} material={textureMaterial} />
-        <mesh name="Plane001" geometry={nodes.Plane001.geometry} material={textureMaterial} />
-        <mesh name="building001" geometry={nodes.building001.geometry} material={textureMaterial} />
-        <mesh name="cover001" geometry={nodes.cover001.geometry} material={textureMaterial} />
-        <mesh name="cover004" geometry={nodes.cover004.geometry} material={textureMaterial} />
-        <mesh name="Cube" geometry={nodes.Cube.geometry} material={textureMaterial} />
-        <mesh name="Cube001" geometry={nodes.Cube001.geometry} material={textureMaterial} />
-        <mesh name="Cube002" geometry={nodes.Cube002.geometry} material={textureMaterial} />
-        <mesh name="Cylinder" geometry={nodes.Cylinder.geometry} material={textureMaterial} />
-        <mesh name="Cylinder001" geometry={nodes.Cylinder001.geometry} material={textureMaterial} />
-        <mesh name="cielinVernt00001" geometry={nodes.cielinVernt00001.geometry} material={textureMaterial} />
-        <mesh name="Cube004" geometry={nodes.Cube004.geometry} material={textureMaterial} />
-        <group name="Cylinder003">
-          <mesh name="Cylinder004_1" geometry={nodes.Cylinder004_1.geometry} material={textureMaterial} />
-          <mesh name="Cylinder004_2" geometry={nodes.Cylinder004_2.geometry} material={textureMaterial} />
-        </group>
-        <mesh name="Cylinder006" geometry={nodes.Cylinder006.geometry} material={textureMaterial} />
-        <mesh name="Cylinder010" geometry={nodes.Cylinder010.geometry} material={textureMaterial} />
-        <group name="Plane002">
-          <mesh name="Plane004_1" geometry={nodes.Plane004_1.geometry} material={textureMaterial} />
-          <mesh name="Plane004_2" geometry={nodes.Plane004_2.geometry} material={textureMaterial} />
-        </group>
-        <mesh name="Plane003" geometry={nodes.Plane003.geometry} material={textureMaterial} />
-        <mesh name="Plane004" geometry={nodes.Plane004.geometry} material={textureMaterial} />
-        <mesh name="cover006" geometry={nodes.cover006.geometry} material={textureMaterial} />
-        <group name="group1646369301006">
-          <mesh name="mesh1646369301007" geometry={nodes.mesh1646369301007.geometry} material={textureMaterial} />
-          <mesh name="mesh1646369301007_1" geometry={nodes.mesh1646369301007_1.geometry} material={textureMaterial} />
-          <mesh name="mesh1646369301007_2" geometry={nodes.mesh1646369301007_2.geometry} material={textureMaterial} />
-          <mesh name="mesh1646369301007_3" geometry={nodes.mesh1646369301007_3.geometry} material={textureMaterial} />
-        </group>
-        <mesh name="Orchid_mesh" geometry={nodes.Orchid_mesh.geometry} material={textureMaterial} />
-        <mesh name="tavble" geometry={nodes.tavble.geometry} material={textureMaterial} />
-        <mesh name="monitor" geometry={nodes.monitor.geometry} material={textureMaterial} />
-        <mesh name="mouseKeyboard" geometry={nodes.mouseKeyboard.geometry} material={textureMaterial} />
-        <group name="couch">
-          <mesh name="mesh198131767" geometry={nodes.mesh198131767.geometry} material={textureMaterial} />
-          <mesh name="mesh198131767_1" geometry={nodes.mesh198131767_1.geometry} material={textureMaterial} />
-          <mesh name="mesh198131767_2" geometry={nodes.mesh198131767_2.geometry} material={textureMaterial} />
-          <mesh name="mesh198131767_3" geometry={nodes.mesh198131767_3.geometry} material={textureMaterial} />
-          <mesh name="mesh198131767_4" geometry={nodes.mesh198131767_4.geometry} material={textureMaterial} />
-          <mesh name="mesh198131767_5" geometry={nodes.mesh198131767_5.geometry} material={textureMaterial} />
-        </group>
-        <group name="Box003">
-          <mesh name="Box003_1" geometry={nodes.Box003_1.geometry} material={textureMaterial} />
-          <mesh name="Box003_1_1" geometry={nodes.Box003_1_1.geometry} material={textureMaterial} />
-          <mesh name="Box003_1_2" geometry={nodes.Box003_1_2.geometry} material={textureMaterial} />
-          <mesh name="Box003_1_3" geometry={nodes.Box003_1_3.geometry} material={textureMaterial} />
-        </group>
-        <group name="FlowerPot2">
-          <mesh name="FlowerPot2_1" geometry={nodes.FlowerPot2_1.geometry} material={textureMaterial} />
-          <mesh name="FlowerPot2_2" geometry={nodes.FlowerPot2_2.geometry} material={textureMaterial} />
-          <mesh name="FlowerPot2_3" geometry={nodes.FlowerPot2_3.geometry} material={textureMaterial} />
-          <mesh name="FlowerPot2_4" geometry={nodes.FlowerPot2_4.geometry} material={textureMaterial} />
-        </group>
-        <group name="FlowerPot4001">
-          <mesh name="FlowerPot4004" geometry={nodes.FlowerPot4004.geometry} material={textureMaterial} />
-          <mesh name="FlowerPot4004_1" geometry={nodes.FlowerPot4004_1.geometry} material={textureMaterial} />
-          <mesh name="FlowerPot4004_2" geometry={nodes.FlowerPot4004_2.geometry} material={textureMaterial} />
-        </group>
-        <group name="FlowerPot4003">
-          <mesh name="FlowerPot4003_1" geometry={nodes.FlowerPot4003_1.geometry} material={textureMaterial} />
-          <mesh name="FlowerPot4003_2" geometry={nodes.FlowerPot4003_2.geometry} material={textureMaterial} />
-          <mesh name="FlowerPot4003_3" geometry={nodes.FlowerPot4003_3.geometry} material={textureMaterial} />
-        </group>
-        <group name="FlowerPot6">
-          <mesh name="FlowerPot6_1" geometry={nodes.FlowerPot6_1.geometry} material={textureMaterial} />
-          <mesh name="FlowerPot6_2" geometry={nodes.FlowerPot6_2.geometry} material={textureMaterial} />
-          <mesh name="FlowerPot6_3" geometry={nodes.FlowerPot6_3.geometry} material={textureMaterial} />
-          <mesh name="FlowerPot6_4" geometry={nodes.FlowerPot6_4.geometry} material={textureMaterial} />
-        </group>
-        <group name="GeoSphere001">
-          <mesh name="GeoSphere001_1" geometry={nodes.GeoSphere001_1.geometry} material={textureMaterial} />
-          <mesh name="GeoSphere001_1_1" geometry={nodes.GeoSphere001_1_1.geometry} material={textureMaterial} />
-        </group>
-        <group name="GeoSphere001001">
-          <mesh name="GeoSphere001_1001" geometry={nodes.GeoSphere001_1001.geometry} material={textureMaterial} />
-          <mesh name="GeoSphere001_1001_1" geometry={nodes.GeoSphere001_1001_1.geometry} material={textureMaterial} />
-        </group>
-        <mesh name="HibiscusFlower_mesh001" geometry={nodes.HibiscusFlower_mesh001.geometry} material={textureMaterial} />
-        <group name="Houseplant_3">
-          <mesh name="Houseplant_3_1" geometry={nodes.Houseplant_3_1.geometry} material={textureMaterial} />
-          <mesh name="Houseplant_3_2" geometry={nodes.Houseplant_3_2.geometry} material={textureMaterial} />
-          <mesh name="Houseplant_3_3" geometry={nodes.Houseplant_3_3.geometry} material={textureMaterial} />
-          <mesh name="Houseplant_3_4" geometry={nodes.Houseplant_3_4.geometry} material={textureMaterial} />
-        </group>
-        <mesh name="Plane010" geometry={nodes.Plane010.geometry} material={textureMaterial} position={[0, 0.068, 0]} />
-        <mesh name="Plane011" geometry={nodes.Plane011.geometry} material={textureMaterial} position={[0, 0.068, 0]} />
-        <group name="FlowerPot2001">
-          <mesh name="FlowerPot2001_1" geometry={nodes.FlowerPot2001_1.geometry} material={textureMaterial} />
-          <mesh name="FlowerPot2001_2" geometry={nodes.FlowerPot2001_2.geometry} material={textureMaterial} />
-          <mesh name="FlowerPot2001_3" geometry={nodes.FlowerPot2001_3.geometry} material={textureMaterial} />
-          <mesh name="FlowerPot2001_4" geometry={nodes.FlowerPot2001_4.geometry} material={textureMaterial} />
-        </group>
-      </group>
     </group>
 
   );
