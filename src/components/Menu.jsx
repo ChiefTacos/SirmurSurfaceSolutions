@@ -1,6 +1,14 @@
-export const Menu = (props) => {
-  const { onSectionChange, menuOpened, setMenuOpened } = props;
+import { DayNightToggle } from "./DayNightToggle";
 
+
+export const Menu = (props) => {
+   const { 
+   onSectionChange, 
+     menuOpened, 
+      setMenuOpened,
+     isDay,        // ← RECEIVE
+     setIsDay      // ← RECEIVE
+  } = props;
   return (
     <>
 {/*       <button
@@ -57,42 +65,38 @@ export const Menu = (props) => {
           {/* <h2 className="mt-0 p-0 italic overline decoration-dashed decoration-1 ">NAVIGATION</h2> */}
 
         </div>
-
+{/* DAY/NIGHT TOGGLE — ONLY VISIBLE WHEN MENU IS OPEN */}
+          {menuOpened && (
+            <div className=" w-full flex justify-center pb-4">
+              <DayNightToggle isDay={isDay} setIsDay={setIsDay} />
+            </div>
+          )}
         <hr className="h-px my-4 bg-gray-200 border-0 dark:bg-gray-700" />
-      <div className="justify-center text-center pt-6">
+      {/* <div className="justify-center text-center pt-6">
   <a
     href="/resume.pdf"
     download
     className="group inline-block bg-indigo-600 text-white px-4 py-2 rounded transition transform
                hover:scale-105 hover:shadow-lg hover:bg-indigo-700"
   >
-    <span className="transition-all pl-2 ml-2  font-bold">Download Resume</span>
+    <span className="transition-all pl-2 ml-2  font-bold">Resume</span>
     <span
       className="ml-2 opacity-0 group-hover:opacity-100 transition-opacity duration-300"
     >
       📄
     </span>
   </a>
-</div>
+</div> */}
 
         <div className="justify-center text-center pt-2 mb-2">
 
         </div>
 
-       {/* <div className="mb-0 pb-0 text-center text-2xl"> 
-        <a href="tel:+12622305182" target="_blank" className="font-bold">
-          <h2>+1 (262) 230 5182</h2>
-          <MenuButton label="📞" />
-
-        </a>
-                 <h3 className="mb-0 pt-1 text-lg  text-center">sirmur.com © 2025</h3>
-
-       </div> */}
        <div className="mb-0 pb-0 text-center text-2xl flex flex-col items-center">
   <a href="tel:+12622305182" target="_blank" className="font-bold relative inline-flex items-center">
     
     {/* Phone emoji with hover group */}
-    <span className="cursor-pointer relative group text-4xl pb-2">
+    <span className="cursor-pointer relative group text-6xl pb-5">
       <MenuButton label="📞" />
       
       {/* Hidden phone number tooltip */}
@@ -109,7 +113,7 @@ export const Menu = (props) => {
     
   </a>
 
-  <h3 className="pb-1 pt-2 text-lg text-center">sirmur.com © 2025</h3>
+  <h3 className="pb-1 pt-2 text-lg text-center">SIRMUR LLC © 2025</h3>
 </div>
 
       </div>

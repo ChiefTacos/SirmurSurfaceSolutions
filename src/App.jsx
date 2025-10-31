@@ -10,8 +10,10 @@ import { Menu } from "./components/Menu";
 import { ScrollManager } from "./components/ScrollManager";
 import { framerMotionConfig } from "./config";
 import { LoadingScreen } from "./components/LoadingScreen";
-import { BackgroundTexture } from "./components/CustomBackground";
-
+// import { BackgroundTexture } from "./components/CustomBackground";
+import { DayNightSky } from "./components/DayNightSky";
+// import { DayNightToggle } from "./components/DayNightToggle";
+import { MobileFOV } from "./components/MobileFOV";
 
 function App() {
   const [section, setSection] = useState(0);
@@ -19,6 +21,8 @@ function App() {
 
   const [menuOpened, setMenuOpened] = useState(false);
   const cameraControlsRef = useRef();
+
+const [isDay, setIsDay] = useState(true); // true = day, false = night
 
   useEffect(() => {
     setMenuOpened(false);
@@ -43,11 +47,19 @@ function App() {
           ...framerMotionConfig,
         }}
       >
+      {/* <DayNightToggle isDay={isDay} setIsDay={setIsDay} /> */}
         {/* fov 37 og */}
-        <Canvas shadows camera={{ position: [0, 3, 10],  fov: 59}}>
+        <Canvas
+          shadows
+          camera={{ position: [0, 3, 10], fov: 59 }}
+          gl={{ preserveDrawingBuffer: true }}
+          clear={false}   // ← LETS SKY RENDER FIRST
+        >          
           {/* <color attach="background" args={["#cfe2f3"]} />  */}
            {/* night mode STARS */}
-          <BackgroundTexture />
+          {/* <BackgroundTexture /> */}
+          <MobileFOV />
+          <DayNightSky debugForceDay={isDay} />
 
 
   {/* 👇 Full camera control always active ONLY FOR DEV TESTING */}
@@ -77,6 +89,8 @@ function App() {
           onSectionChange={setSection}
           menuOpened={menuOpened}
           setMenuOpened={setMenuOpened}
+          isDay={isDay}           // ← ADD
+  setIsDay={setIsDay}     // ← ADD
         />
         <Cursor />
       </MotionConfig>

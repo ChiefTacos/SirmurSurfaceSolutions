@@ -8,7 +8,6 @@ import { motion } from "framer-motion-3d";
 import { useEffect, useRef, useState } from "react";
 import { framerMotionConfig } from "../config";
 import { Avatar } from "./Avatar";
-import { Background } from "./Background";
 import { Office } from "./Office";
 import { Projects } from "./Projects";
 
@@ -115,12 +114,12 @@ export const Experience = (props) => {
       </motion.group>
       <ambientLight intensity={1} />
       <motion.group
-        position={[1.5, 2, 0]}
+        position={[6.5, 1, -6]}
         scale={[0.9, 0.9, 0.9]}
         
         
          animate={{
-            rotateY: section === 2 ? 0 : Math.PI / -4,
+            rotateY: section === 2 ? 0 : Math.PI / 5,
 
          }}
 

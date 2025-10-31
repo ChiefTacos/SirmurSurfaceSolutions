@@ -145,7 +145,7 @@ const ZoomCamera = ({ isFirstSlide }) => {
   return null;
 };
   return (
-    <group ref={group} {...props} dispose={null} position={[-10, -5, -3]}  rotation={[0, 0, 0]} scale={1}>
+    <group ref={group} {...props} dispose={null} position={[-11, -4, -2]}  rotation={[0, 0, 0]} scale={1.1}>
       <group scale={0.01}>
             <GlassComponent
         geometry={nodes.Door_Front_House_material_0001.geometry}
@@ -217,7 +217,7 @@ const ZoomCamera = ({ isFirstSlide }) => {
         rotation={[-Math.PI / 2, 0, 0]}
         scale={100}
        />
- 
+      
        <group position={[950.267, 199.77, -398.613]} rotation={[-Math.PI / 2, 0, -Math.PI / 2]} scale={100}>
           <mesh geometry={nodes.Balcony_Glass_door_Upper004_House_material_0.geometry} material={materials.House_material} />
           {/* <mesh geometry={nodes.Balcony_Glass_door_Upper004_House_material_0001.geometry} material={materials.House_material} position={[0.012, -0.051, 0]} /> */}
@@ -232,10 +232,10 @@ const ZoomCamera = ({ isFirstSlide }) => {
         </group>
         <group position={[-228.117, 406.956, 1.194]} rotation={[-Math.PI / 2, 0, Math.PI / 2]} scale={100}>
           <mesh geometry={nodes.Balcony_rail_glass001_House_material_0.geometry} material={materials.House_material} />
-
+          {/* <mesh geometry={nodes.Balcony_rail_glass003_House_material_0.geometry} material={materials.House_material} rotation={[0, 0, -Math.PI]} /> */}
             <OverlayItem
               rotation-x={Math.PI / 2}   // <-- fix sideways tilt
-              rotation-y={0}             // adjust if needed
+              rotation-y={-90}             // adjust if needed
               rotation-z={0}              
               position-x={1.2}
               position-z={1.2}
@@ -246,8 +246,6 @@ const ZoomCamera = ({ isFirstSlide }) => {
               bgColor={"bg-yellow-500"}
               className={"transition delay-1000"}
             />
-      
-          {/* <mesh geometry={nodes.Balcony_rail_glass003_House_material_0.geometry} material={materials.House_material} rotation={[0, 0, -Math.PI]} /> */}
         </group>
         <group position={[400, 200, 0]} rotation={[-Math.PI / 2, 0, 0]} scale={100}>
           <mesh geometry={nodes.Door_Front_House_material_0.geometry} material={materials.House_material} />
@@ -273,13 +271,49 @@ const ZoomCamera = ({ isFirstSlide }) => {
           <mesh geometry={nodes.Window_front_2nd_floor001_House_material_0.geometry} material={materials.House_material} />
           {/* <mesh geometry={nodes.Window_front_2nd_floor001_House_material_0001.geometry} material={materials.House_material} /> */}
         </group>
+        
+        
         <mesh geometry={nodes._Roof_Main_House_material_0.geometry} material={materials.newRoof} position={[450, 709.989, -200]} rotation={[-Math.PI / 2, 0, 0]} scale={100} />
         <mesh geometry={nodes.Back_wall_2nd_floor_House_material_0.geometry} material={materials.House_material} position={[400, 200, 0]} rotation={[-Math.PI / 2, 0, 0]} scale={100} />
-        <mesh geometry={nodes.Balcony_Glass_door_House_material_0.geometry} material={materials.House_material} position={[400, 200, 0]} rotation={[-Math.PI / 2, 0, 0]} scale={100} />
-        <mesh geometry={nodes.Balcony_Glass_door_2_House_material_0.geometry} material={materials.House_material} position={[402.152, 200, 0]} rotation={[-Math.PI / 2, 0, 0]} scale={100} />
-        <mesh geometry={nodes.Balcony_Glass_door_2_Upper_House_material_0.geometry} material={materials.House_material} position={[400, 200, 0]} rotation={[-Math.PI / 2, 0, 0]} scale={100} />
-        <mesh geometry={nodes.Balcony_Glass_door_2001_House_material_0.geometry} material={materials.House_material} position={[400, 200, 0]} rotation={[-Math.PI / 2, 0, 0]} scale={100} />
-        <mesh geometry={nodes.Balcony_Glass_door_Upper_House_material_0.geometry} material={materials.House_material} position={[400, 200, 0]} rotation={[-Math.PI / 2, 0, 0]} scale={100} />
+
+        <GlassComponent
+        geometry={nodes.Balcony_Glass_door_House_material_0.geometry}
+        position={[400, 200, 0]}
+        rotation={[-Math.PI / 2, 0, 0]}
+        scale={100}
+       />
+       <GlassComponent
+        geometry={nodes.Balcony_Glass_door_2_House_material_0.geometry}
+        position={[402.152, 200, 0]}
+        rotation={[-Math.PI / 2, 0, 0]}
+        scale={100}
+       />
+        <GlassComponent
+        geometry={nodes.Balcony_Glass_door_2_Upper_House_material_0.geometry}
+        position={[400, 200, 0]}
+        rotation={[-Math.PI / 2, 0, 0]}
+        scale={100}
+       />
+       <GlassComponent
+        geometry={nodes.Balcony_Glass_door_2001_House_material_0.geometry}
+        position={[400, 200, 0]}
+        rotation={[-Math.PI / 2, 0, 0]}
+        scale={100}
+       />
+       <GlassComponent
+        geometry={nodes.Balcony_Glass_door_Upper_House_material_0.geometry}
+        position={[400, 200, 0]}
+        rotation={[-Math.PI / 2, 0, 0]}
+        scale={100}
+       />
+        {/* <mesh geometry={nodes.Balcony_Glass_door_House_material_0.geometry} material={materials.House_material} position={[400, 200, 0]} rotation={[-Math.PI / 2, 0, 0]} scale={100} />// */}
+        {/* <mesh geometry={nodes.Balcony_Glass_door_2_House_material_0.geometry} material={materials.House_material} position={[402.152, 200, 0]} rotation={[-Math.PI / 2, 0, 0]} scale={100} /> // */}
+        {/* <mesh geometry={nodes.Balcony_Glass_door_2_Upper_House_material_0.geometry} material={materials.House_material} position={[400, 200, 0]} rotation={[-Math.PI / 2, 0, 0]} scale={100} />// */}
+        {/* <mesh geometry={nodes.Balcony_Glass_door_2001_House_material_0.geometry} material={materials.House_material} position={[400, 200, 0]} rotation={[-Math.PI / 2, 0, 0]} scale={100} />// */}
+        <mesh geometry={nodes.Balcony_Glass_door_Upper_House_material_0.geometry} material={materials.House_material} position={[400, 200, 0]} rotation={[-Math.PI / 2, 0, 0]} scale={100} />//
+
+
+
         <mesh geometry={nodes.Balcony_Glass_door_Upper001_House_material_0.geometry} material={materials.House_material} position={[454.801, 182.653, -597.463]} rotation={[-Math.PI / 2, 0, 0]} scale={100} />
         <mesh geometry={nodes.Balcony_Glass_door_Upper002_House_material_0.geometry} material={materials.House_material} position={[-3.284, 499.399, -602.541]} rotation={[-Math.PI / 2, 0, 0]} scale={100} />
         <mesh geometry={nodes.Balcony_Glass_door_Upper003_House_material_0.geometry} material={materials.House_material} position={[-1.15, 199.77, -600.006]} rotation={[-Math.PI / 2, 0, 0]} scale={100} />
