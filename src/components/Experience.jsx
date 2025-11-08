@@ -10,6 +10,8 @@ import { framerMotionConfig } from "../config";
 import { Avatar } from "./Avatar";
 import { Office } from "./Office";
 import { Projects } from "./Projects";
+// import { MuscleCar } from "./MuscleCar";
+import { RVmodel } from "./Rv";
 
 export const Experience = (props) => {
   const { menuOpened } = props;
@@ -114,8 +116,8 @@ export const Experience = (props) => {
       </motion.group>
       <ambientLight intensity={1} />
       <motion.group
-        position={[6.5, 1, -6]}
-        scale={[0.9, 0.9, 0.9]}
+        position={[8, 1, -4]}
+        scale={[1, 1, 1]}
         
         
          animate={{
@@ -126,6 +128,8 @@ export const Experience = (props) => {
 
       >
         <Office section={section} />
+        {/* <MuscleCar /> */}
+         <RVmodel /> 
         <group
           ref={characterContainerAboutRef}
           name="CharacterSpot"

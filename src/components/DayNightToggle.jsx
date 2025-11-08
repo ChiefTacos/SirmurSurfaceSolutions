@@ -2,7 +2,8 @@
 export const DayNightToggle = ({ isDay, setIsDay }) => {
   return (
     <button
-      onClick={() => setIsDay((prev) => !prev)}
+      // onClick={() => setIsDay((prev) => !prev)}
+      onClick={() => setIsDay(!isDay)}
       className={`
         w-24 h-24 lg:w-36 lg:h-36 rounded-full
         flex items-center justify-center

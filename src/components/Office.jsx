@@ -9,8 +9,21 @@ import { animate, useMotionValue } from "framer-motion";
 import { useEffect, useRef } from "react";
 import * as THREE from "three";
 
+//white floor baby
 
-
+function SquareComponent({ position, rotation, scale }) {
+  return (
+    <mesh
+      geometry={new THREE.PlaneGeometry(1050, 900)} // Large width and length
+      position={position}
+      rotation={rotation}
+      scale={scale}
+    >
+      <meshStandardMaterial color="white" side={THREE.DoubleSide} />
+    </mesh>
+  );
+}
+//glass baby
 
 function GlassComponent({ geometry, position, rotation, scale }) {
   //  <GlassComponent
@@ -23,9 +36,7 @@ function GlassComponent({ geometry, position, rotation, scale }) {
     <mesh geometry={geometry} position={position} rotation={rotation} scale={scale}>
       {/* The black frame overlay */}
 
-      <mesh geometry={geometry}>
-        <meshBasicMaterial color="black" wireframe={true} />
-      </mesh>
+
       {/* <MeshTransmissionMaterial
         color="#e0f7ff"
         transmission={1}
@@ -35,7 +46,16 @@ function GlassComponent({ geometry, position, rotation, scale }) {
       /> */}
             {/* The black frame overlay */}
 
-       <MeshTransmissionMaterial
+       {/* <MeshTransmissionMaterial
+          color="#444444"               
+          transmission={0.9}            
+          roughness={0.15} 
+          thickness={0.5}     
+          ior={1}           
+          anisotropy={0.05}
+          chromaticAberration={0.005}
+        /> */}
+             <MeshTransmissionMaterial
           color="#444444"               // dark gray-blue tone (lighter than #222)
           transmission={0.8}            // more light passes through (less opaque)
           roughness={0.45}              // moderate softness
@@ -51,6 +71,12 @@ function GlassComponent({ geometry, position, rotation, scale }) {
 
 
 
+
+
+
+/////
+///3D sign
+/////
 
 
 
@@ -112,7 +138,7 @@ export function Office(props) {
   const textureGlassMaterial = new THREE.MeshStandardMaterial({
     map: texture,
     transparent: true,
-    opacity: 0.42,
+    opacity: 0.32,
   });
   
 
@@ -123,7 +149,7 @@ export function Office(props) {
   useEffect(() => {
 
     animate(textureOpacity, section === 0 ? 1 : 0);
-    animate(glassTextureOpacity, section === 0 ? 0.42 : 0);
+    animate(glassTextureOpacity, section === 0 ? 0.32 : 0);
     console.log(actions);
  
    }, [section]);
@@ -147,24 +173,31 @@ const ZoomCamera = ({ isFirstSlide }) => {
   return (
     <group ref={group} {...props} dispose={null} position={[-11, -4, -2]}  rotation={[0, 0, 0]} scale={1.1}>
       <group scale={0.01}>
+        <SquareComponent
+          position={[420, 14, -260]} // Place at ground level, centered in the scene
+          rotation={[-Math.PI / 2, 0, 0]} // Face upwards
+          scale={1} // Match the scale of other components
+        />
             <GlassComponent
         geometry={nodes.Door_Front_House_material_0001.geometry}
         position={[400, 200, 0]}
         rotation={[-Math.PI / 2, 0, 0]}
         scale={100}
        />
-                 <GlassComponent
+                 {/* <GlassComponent
         geometry={nodes.Window_front_2nd_floor002_House_material_0.geometry}
         position={[400, 200, 0]}
         rotation={[-Math.PI / 2, 0, 0]}
         scale={100}
-       />
+       /> */}
                  <GlassComponent
         geometry={nodes.Window_front_2nd_floor001_House_material_0001.geometry}
         position={[400, 200, 0]}
         rotation={[-Math.PI / 2, 0, 0]}
         scale={100}
        />
+
+
         <GlassComponent
         geometry={nodes.Window_front_2nd_floor_House_material_0001.geometry}
         position={[400, 200, 0]}
@@ -175,24 +208,24 @@ const ZoomCamera = ({ isFirstSlide }) => {
         geometry={nodes.Window_front_1st_floor_House_material_0001.geometry}
         position={[400, 200, 10]}
         rotation={[-Math.PI / 2, 0, 0]}
-                scale={100}
+        scale={100}
 
        />
-<GlassComponent
+{/* <GlassComponent
         geometry={nodes.Balcony_Glass_door_Upper004_House_material_0001.geometry}
         position={[950, 200, -390]}
         rotation={[-Math.PI / 2, 0, -Math.PI / 2]}
-                scale={100}
+       scale={100}
 
-       />
-       <GlassComponent
+       /> */}
+       {/* <GlassComponent
         geometry={nodes.Balcony_Glass_door_Upper005_House_material_0001.geometry}
         position={[950, 200, -20]}
         rotation={[-Math.PI / 2, 0, -Math.PI / 2]}
-                scale={100}
+       scale={100}
 
         
-       />
+       /> */}
        {/* <GlassComponent
         geometry={nodes.Balcony_rail_glass002_House_material_0.geometry}
         position={[400, 200, 0]}
@@ -249,7 +282,7 @@ const ZoomCamera = ({ isFirstSlide }) => {
         </group>
         <group position={[400, 200, 0]} rotation={[-Math.PI / 2, 0, 0]} scale={100}>
           <mesh geometry={nodes.Door_Front_House_material_0.geometry} material={materials.House_material} />
-          {/* <mesh geometry={nodes.Door_Front_House_material_0001.geometry} material={materials.House_material} /> */}
+          <mesh geometry={nodes.Door_Front_House_material_0001.geometry} material={materials.House_material} />
         </group>
         <group position={[400, 200, 0]} rotation={[-Math.PI / 2, 0, 0]} scale={100}>
           <mesh geometry={nodes.Door_side_House_material_0.geometry} material={materials.House_material} />
@@ -310,7 +343,7 @@ const ZoomCamera = ({ isFirstSlide }) => {
         {/* <mesh geometry={nodes.Balcony_Glass_door_2_House_material_0.geometry} material={materials.House_material} position={[402.152, 200, 0]} rotation={[-Math.PI / 2, 0, 0]} scale={100} /> // */}
         {/* <mesh geometry={nodes.Balcony_Glass_door_2_Upper_House_material_0.geometry} material={materials.House_material} position={[400, 200, 0]} rotation={[-Math.PI / 2, 0, 0]} scale={100} />// */}
         {/* <mesh geometry={nodes.Balcony_Glass_door_2001_House_material_0.geometry} material={materials.House_material} position={[400, 200, 0]} rotation={[-Math.PI / 2, 0, 0]} scale={100} />// */}
-        <mesh geometry={nodes.Balcony_Glass_door_Upper_House_material_0.geometry} material={materials.House_material} position={[400, 200, 0]} rotation={[-Math.PI / 2, 0, 0]} scale={100} />//
+        {/* <mesh geometry={nodes.Balcony_Glass_door_Upper_House_material_0.geometry} material={materials.House_material} position={[400, 200, 0]} rotation={[-Math.PI / 2, 0, 0]} scale={100} />// */}
 
 
 
