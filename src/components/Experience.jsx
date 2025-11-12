@@ -37,6 +37,8 @@ export const Experience = (props) => {
   //   });
   // }, [menuOpened]);
 
+
+  
   const characterContainerAboutRef = useRef();
 
   const [characterAnimation, setCharacterAnimation] = useState("Typing");

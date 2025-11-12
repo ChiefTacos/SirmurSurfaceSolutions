@@ -26,6 +26,8 @@ const OverlayItem = ({
   // const htmlRef = useRef();
 const groupRef = useRef(); // Ref for the THREE.Group
 const initialCameraState = useRef({ position: null, quaternion: null });
+const [showContent, setShowContent] = useState(false); // State to control visibility
+const [isClickable, setIsClickable] = useState(true); //prevent bug when going reseting while animation runs
 
 
   // // Use useFrame to check for parent until found
@@ -40,329 +42,6 @@ const initialCameraState = useRef({ position: null, quaternion: null });
   //   }
   // });
 
-const handleButtonClick = (e) => {
-    e.stopPropagation();
-    console.log("Button Clicked!");
-    if (typeof setIsAnimating !== "function") {
-      console.error("setIsAnimating is not a function:", setIsAnimating);
-      return;
-    }
-    if (typeof setCameraTarget !== "function") {
-      console.error("setCameraTarget is not a function:", setCameraTarget);
-      return;
-    }
-    setIsAnimating(true);
-
-    // Store initial camera position and quaternion
-    initialCameraState.current = {
-      position: camera.position.clone(),
-      quaternion: camera.quaternion.clone(),
-    };
-    console.log("Stored Initial Camera State:", {
-      position: initialCameraState.current.position.toArray(),
-      quaternion: initialCameraState.current.quaternion.toArray(),
-    });
-
-    if (!parentGroupRef.current) {
-      console.warn("Parent group not found, using fallback position");
-      const fallbackPos = new THREE.Vector3(-11, -1, -2);
-      animate(0, 1, {
-        duration: 1,
-        onUpdate: (t) => {
-          camera.position.lerpVectors(camera.position, fallbackPos, t);
-          camera.updateProjectionMatrix();
-        },
-      });
-      camera.lookAt(-11, -4, -2);
-      camera.updateProjectionMatrix();
-      setTimeout(() => {
-        console.log("Fallback Final Camera Pos:", camera.position.toArray());
-        setIsAnimating(false);
-      }, 2000);
-      return;
-    }
-
-    // Get parent group's world matrix
-    parentGroupRef.current.updateWorldMatrix(true, false);
-    const parentWorldMatrix = new THREE.Matrix4().copy(parentGroupRef.current.matrixWorld);
-    console.log("Parent World Matrix:", parentWorldMatrix.elements);
-
-    // Calculate parent group's world position (center)
-    const parentWorldPos = new THREE.Vector3().setFromMatrixPosition(parentWorldMatrix);
-    console.log("Parent World Pos:", parentWorldPos.toArray());
-
-    // Calculate OverlayItem's world position
-    const localPos = new THREE.Vector3(positionX, positionY, positionZ);
-    const overlayWorldPos = localPos.clone().applyMatrix4(parentWorldMatrix);
-    console.log("OverlayItem World Pos:", overlayWorldPos.toArray());
-
-    // Determine the "up" direction of the parent group (local Y-axis transformed to world space)
-    const upVector = new THREE.Vector3(0, 1, 0);
-    const worldUpVector = upVector.clone().applyMatrix4(parentWorldMatrix).normalize();
-    console.log("World Up Vector:", worldUpVector.toArray());
-
-    // Determine the "right" direction for horizontal offset (local X-axis transformed to world space)
-    const rightVector = new THREE.Vector3(1, 0, 0);
-    const worldRightVector = rightVector.clone().applyMatrix4(parentWorldMatrix).normalize();
-    console.log("World Right Vector:", worldRightVector.toArray());
-
-    // Position camera above the parent group, offset along the up vector
-    const offsetDistance = 5;
-    const cameraTargetPos = parentWorldPos.clone().add(worldUpVector.multiplyScalar(offsetDistance));
-    // Apply horizontal offset in the deck's "right" direction
-    const horizontalOffset = 2;
-    cameraTargetPos.add(worldRightVector.multiplyScalar(horizontalOffset));
-    console.log("Camera Target Pos (with offset):", cameraTargetPos.toArray());
-
-    // Animate camera to the target position
-    const startPos = camera.position.clone();
-    animate(0, 1, {
-      duration: 1,
-      onUpdate: (t) => {
-        camera.position.lerpVectors(startPos, cameraTargetPos, t);
-        camera.updateProjectionMatrix();
-      },
-    });
-
-    // Look at OverlayItem's world position
-    camera.lookAt(overlayWorldPos);
-    camera.updateProjectionMatrix();
-    console.log("Camera LookAt:", overlayWorldPos.toArray());
-
-    // Compute bounding box of balconyGroupRef
-    const boundingBox = new THREE.Box3().setFromObject(parentGroupRef.current);
-    const boxSize = boundingBox.getSize(new THREE.Vector3());
-    console.log("Balcony Group Bounding Box:", {
-      min: boundingBox.min.toArray(),
-      max: boundingBox.max.toArray(),
-      size: boxSize.toArray(),
-      center: boundingBox.getCenter(new THREE.Vector3()).toArray(),
-    });
-
-    // Rotate OverlayItem to face the camera
-    if (groupRef.current) {
-      console.log("groupRef.current:", groupRef.current);
-      // Calculate direction from OverlayItem to camera
-      const cameraDirection = new THREE.Vector3()
-        .subVectors(cameraTargetPos, overlayWorldPos)
-        .normalize();
-      // Create a quaternion to rotate towards the camera
-      const quaternion = new THREE.Quaternion().setFromUnitVectors(
-        new THREE.Vector3(0, 0, 1), // HTML's default forward direction (positive Z)
-        cameraDirection
-      );
-      // Account for initial rotations
-      const initialQuaternion = new THREE.Quaternion().setFromEuler(
-        new THREE.Euler(rotationX, rotationY, rotationZ, 'XYZ')
-      );
-      const finalQuaternion = initialQuaternion.multiply(quaternion);
-
-      // Animate rotation using quaternion
-      const startQuaternion = groupRef.current.quaternion.clone();
-      animate(0, 1, {
-        duration: 1,
-        onUpdate: (t) => {
-          if (groupRef.current) {
-            const lerpedQuaternion = new THREE.Quaternion().slerpQuaternions(
-              startQuaternion,
-              finalQuaternion,
-              t
-            );
-            groupRef.current.quaternion.copy(lerpedQuaternion);
-          } else {
-            console.warn("groupRef.current is undefined during animation");
-          }
-        },
-        onComplete: () => {
-          console.log("Rotation animation completed");
-        },
-      });
-      console.log("OverlayItem Target Quaternion:", [
-        finalQuaternion.x,
-        finalQuaternion.y,
-        finalQuaternion.z,
-        finalQuaternion.w,
-      ]);
-    } else {
-      console.warn("groupRef.current is undefined, skipping rotation");
-    }
-
-    // Store camera target in Experience.jsx
-    setCameraTarget({
-      position: cameraTargetPos.toArray(),
-      lookAt: overlayWorldPos.toArray(),
-    });
-
-    setTimeout(() => {
-      console.log("Final Camera Pos:", camera.position.toArray());
-      setIsAnimating(false);
-    }, 2000);
-  };
-
-  const handleResetClick = (e) => {
-    e.stopPropagation();
-    console.log("Reset Button Clicked!");
-    if (typeof setIsAnimating !== "function") {
-      console.error("setIsAnimating is not a function:", setIsAnimating);
-      return;
-    }
-    setIsAnimating(true);
-
-    if (!initialCameraState.current.position || !initialCameraState.current.quaternion) {
-      console.warn("Initial camera state not found, using fallback position");
-      const fallbackPos = new THREE.Vector3(-11, -1, -2);
-      animate(0, 1, {
-        duration: 1,
-        onUpdate: (t) => {
-          camera.position.lerpVectors(camera.position, fallbackPos, t);
-          camera.updateProjectionMatrix();
-        },
-      });
-      camera.lookAt(-11, -4, -2);
-      camera.updateProjectionMatrix();
-      setTimeout(() => {
-        console.log("Fallback Reset Camera Pos:", camera.position.toArray());
-        setIsAnimating(false);
-      }, 1000);
-      return;
-    }
-    
-    
-    // Adjust initial position by moving back 10 units along world Z-axis
-    const adjustedPos = initialCameraState.current.position.clone();
-    adjustedPos.z += 0; // Move back x units along world Z-axis
-    console.log("Adjusted Reset Camera Pos:", adjustedPos.toArray());
-
-    // Animate camera to adjusted position
-    const startPos = camera.position.clone();
-    animate(0, 1, {
-      duration: 1,
-      onUpdate: (t) => {
-        camera.position.lerpVectors(startPos, adjustedPos, t);
-        camera.updateProjectionMatrix();
-      },
-    });
-
-    // Animate camera rotation back to initial quaternion
-    const startQuaternion = camera.quaternion.clone();
-    const targetQuaternion = initialCameraState.current.quaternion;
-    animate(0, 1, {
-      duration: 1,
-      onUpdate: (t) => {
-        camera.quaternion.slerpQuaternions(startQuaternion, targetQuaternion, t);
-        camera.updateProjectionMatrix();
-      },
-    });
-
-    // Reset OverlayItem rotation to initial values
-    if (groupRef.current) {
-      const initialQuaternion = new THREE.Quaternion().setFromEuler(
-        new THREE.Euler(rotationX, rotationY, rotationZ, 'XYZ')
-      );
-      const startOverlayQuaternion = groupRef.current.quaternion.clone();
-      animate(0, 1, {
-        duration: 1,
-        onUpdate: (t) => {
-          if (groupRef.current) {
-            const lerpedQuaternion = new THREE.Quaternion().slerpQuaternions(
-              startOverlayQuaternion,
-              initialQuaternion,
-              t
-            );
-            groupRef.current.quaternion.copy(lerpedQuaternion);
-          }
-        },
-        onComplete: () => {
-          console.log("OverlayItem rotation reset completed");
-        },
-      });
-    } else {
-      console.warn("groupRef.current is undefined, skipping rotation reset");
-    }
-
-    // Clear camera target
-    setCameraTarget(null);
-
-    setTimeout(() => {
-      console.log("Reset Camera Pos:", camera.position.toArray());
-      setIsAnimating(false);
-    }, 1000);
-  };
-
-  const handlePointerDown = (e) => {
-    e.stopPropagation();
-    console.log("Html Pointer Down:", e);
-  };
-
-  const handleTestClick = (e) => {
-    e.stopPropagation();
-    console.log("Test Button Clicked!");
-  };
-
-  return (
-    <group
-      ref={groupRef}
-      position={[positionX, positionY, positionZ]}
-      rotation={[rotationX, rotationY, rotationZ]}
-    >
-      <Html
-        transform
-        distanceFactor={5}
-        center
-        zIndexRange={[100, 1000]}
-        occlude="blending"
-        className={`w-64 h-48 rounded-md overflow-hidden transition-opacity duration-1000 ${className}`}
-        {...props}
-      >
-        <div
-          className="bg-white bg-opacity-90 backdrop-blur-2xl text-sm p-2 w-full relative"
-          style={{ pointerEvents: "auto" }}
-        >
-          {/* Reset Icon Button */}
-          <button
-            className="absolute top-2 right-2 w-6 h-6 bg-gray-500 hover:bg-gray-600 text-white rounded-full flex items-center justify-center"
-            style={{ pointerEvents: "auto" }}
-            onClick={handleResetClick}
-            title="Reset View"
-          >
-            <svg
-              xmlns="http://www.w3.org/2000/svg"
-              fill="none"
-              viewBox="0 0 24 24"
-              stroke="currentColor"
-              className="w-4 h-4"
-            >
-              <path
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                strokeWidth={2}
-                d="M4 4v5h5m-5 0l8 8m0 0l8-8m-8 8V9"
-              />
-            </svg>
-          </button>
-          <h2 className="font-bold">{title}</h2>
-          <p>{description}</p>
-          <button
-            className={`${bgColor} hover:bg-opacity-50 transition-colors duration-500 px-4 py-2 font-bold text-white w-full text-xs`}
-            style={{ pointerEvents: "auto" }}
-            onClick={handleButtonClick}
-          >
-            Add to cart ${price}
-          </button>
-          <button
-            className="bg-blue-500 hover:bg-opacity-50 transition-colors duration-500 px-4 py-2 font-bold text-white w-full text-xs mt-2"
-            style={{ pointerEvents: "auto" }}
-            onClick={handleTestClick}
-          >
-            Test Click
-          </button>
-        </div>
-      </Html>
-    </group>
-  );
-};
-
-export default OverlayItem;
 // const handleButtonClick = (e) => {
 //     e.stopPropagation();
 //     console.log("Button Clicked!");
@@ -375,6 +54,16 @@ export default OverlayItem;
 //       return;
 //     }
 //     setIsAnimating(true);
+
+//     // Store initial camera position and quaternion
+//     initialCameraState.current = {
+//       position: camera.position.clone(),
+//       quaternion: camera.quaternion.clone(),
+//     };
+//     console.log("Stored Initial Camera State:", {
+//       position: initialCameraState.current.position.toArray(),
+//       quaternion: initialCameraState.current.quaternion.toArray(),
+//     });
 
 //     if (!parentGroupRef.current) {
 //       console.warn("Parent group not found, using fallback position");
@@ -454,7 +143,7 @@ export default OverlayItem;
 
 //     // Rotate OverlayItem to face the camera
 //     if (groupRef.current) {
-//       console.log("groupRef.current:", groupRef.current); // Debug: Inspect groupRef
+//       console.log("groupRef.current:", groupRef.current);
 //       // Calculate direction from OverlayItem to camera
 //       const cameraDirection = new THREE.Vector3()
 //         .subVectors(cameraTargetPos, overlayWorldPos)
@@ -512,6 +201,96 @@ export default OverlayItem;
 //     }, 2000);
 //   };
 
+//   const handleResetClick = (e) => {
+//     e.stopPropagation();
+//     console.log("Reset Button Clicked!");
+//     if (typeof setIsAnimating !== "function") {
+//       console.error("setIsAnimating is not a function:", setIsAnimating);
+//       return;
+//     }
+//     setIsAnimating(true);
+
+//     if (!initialCameraState.current.position || !initialCameraState.current.quaternion) {
+//       console.warn("Initial camera state not found, using fallback position");
+//       const fallbackPos = new THREE.Vector3(-11, -1, -2);
+//       animate(0, 1, {
+//         duration: 1,
+//         onUpdate: (t) => {
+//           camera.position.lerpVectors(camera.position, fallbackPos, t);
+//           camera.updateProjectionMatrix();
+//         },
+//       });
+//       camera.lookAt(-11, -4, -2);
+//       camera.updateProjectionMatrix();
+//       setTimeout(() => {
+//         console.log("Fallback Reset Camera Pos:", camera.position.toArray());
+//         setIsAnimating(false);
+//       }, 1000);
+//       return;
+//     }
+    
+    
+//     // Adjust initial position by moving back 10 units along world Z-axis
+//     const adjustedPos = initialCameraState.current.position.clone();
+//     adjustedPos.z += 0; // Move back x units along world Z-axis
+//     console.log("Adjusted Reset Camera Pos:", adjustedPos.toArray());
+
+//     // Animate camera to adjusted position
+//     const startPos = camera.position.clone();
+//     animate(0, 1, {
+//       duration: 1,
+//       onUpdate: (t) => {
+//         camera.position.lerpVectors(startPos, adjustedPos, t);
+//         camera.updateProjectionMatrix();
+//       },
+//     });
+
+//     // Animate camera rotation back to initial quaternion
+//     const startQuaternion = camera.quaternion.clone();
+//     const targetQuaternion = initialCameraState.current.quaternion;
+//     animate(0, 1, {
+//       duration: 1,
+//       onUpdate: (t) => {
+//         camera.quaternion.slerpQuaternions(startQuaternion, targetQuaternion, t);
+//         camera.updateProjectionMatrix();
+//       },
+//     });
+
+//     // Reset OverlayItem rotation to initial values
+//     if (groupRef.current) {
+//       const initialQuaternion = new THREE.Quaternion().setFromEuler(
+//         new THREE.Euler(rotationX, rotationY, rotationZ, 'XYZ')
+//       );
+//       const startOverlayQuaternion = groupRef.current.quaternion.clone();
+//       animate(0, 1, {
+//         duration: 1,
+//         onUpdate: (t) => {
+//           if (groupRef.current) {
+//             const lerpedQuaternion = new THREE.Quaternion().slerpQuaternions(
+//               startOverlayQuaternion,
+//               initialQuaternion,
+//               t
+//             );
+//             groupRef.current.quaternion.copy(lerpedQuaternion);
+//           }
+//         },
+//         onComplete: () => {
+//           console.log("OverlayItem rotation reset completed");
+//         },
+//       });
+//     } else {
+//       console.warn("groupRef.current is undefined, skipping rotation reset");
+//     }
+
+//     // Clear camera target
+//     setCameraTarget(null);
+
+//     setTimeout(() => {
+//       console.log("Reset Camera Pos:", camera.position.toArray());
+//       setIsAnimating(false);
+//     }, 1000);
+//   };
+
 //   const handlePointerDown = (e) => {
 //     e.stopPropagation();
 //     console.log("Html Pointer Down:", e);
@@ -538,9 +317,31 @@ export default OverlayItem;
 //         {...props}
 //       >
 //         <div
-//           className="bg-white bg-opacity-90 backdrop-blur-2xl text-sm p-2 w-full"
+//           className="bg-white bg-opacity-90 backdrop-blur-2xl text-sm p-2 w-full relative"
 //           style={{ pointerEvents: "auto" }}
 //         >
+//           {/* Reset Icon Button */}
+//           <button
+//             className="absolute top-2 right-2 w-6 h-6 bg-gray-500 hover:bg-gray-600 text-white rounded-full flex items-center justify-center"
+//             style={{ pointerEvents: "auto" }}
+//             onClick={handleResetClick}
+//             title="Reset View"
+//           >
+//             <svg
+//               xmlns="http://www.w3.org/2000/svg"
+//               fill="none"
+//               viewBox="0 0 24 24"
+//               stroke="currentColor"
+//               className="w-4 h-4"
+//             >
+//               <path
+//                 strokeLinecap="round"
+//                 strokeLinejoin="round"
+//                 strokeWidth={2}
+//                 d="M4 4v5h5m-5 0l8 8m0 0l8-8m-8 8V9"
+//               />
+//             </svg>
+//           </button>
 //           <h2 className="font-bold">{title}</h2>
 //           <p>{description}</p>
 //           <button
@@ -562,9 +363,341 @@ export default OverlayItem;
 //     </group>
 //   );
 // };
+const handleButtonClick = (e) => {
+    e.stopPropagation();
+    console.log("Button Clicked!");
 
-// export default OverlayItem;
+      if (!isClickable) return; // Prevent double-clicking
+  setIsClickable(false); // Disable immediately
 
+
+    if (typeof setIsAnimating !== "function") {
+      console.error("setIsAnimating is not a function:", setIsAnimating);
+      return;
+    }
+    if (typeof setCameraTarget !== "function") {
+      console.error("setCameraTarget is not a function:", setCameraTarget);
+      return;
+    }
+    setIsAnimating(true);
+
+    // Store initial camera position and quaternion
+    initialCameraState.current = {
+      position: camera.position.clone(),
+      quaternion: camera.quaternion.clone(),
+    };
+    console.log("Stored Initial Camera State:", {
+      position: initialCameraState.current.position.toArray(),
+      quaternion: initialCameraState.current.quaternion.toArray(),
+    });
+
+    if (!parentGroupRef.current) {
+      console.warn("Parent group not found, using fallback position");
+      const fallbackPos = new THREE.Vector3(-11, -1, -2);
+      animate(0, 1, {
+        duration: 1,
+        onUpdate: (t) => {
+          camera.position.lerpVectors(camera.position, fallbackPos, t);
+          camera.updateProjectionMatrix();
+        },
+      });
+      camera.lookAt(-11, -4, -2);
+      camera.updateProjectionMatrix();
+      setTimeout(() => {
+        console.log("Fallback Final Camera Pos:", camera.position.toArray());
+
+        setShowContent(true); // Show content after animation
+        setIsAnimating(false);
+      }, 1000);
+      return;
+    }
+
+    // Get parent group's world matrix
+    parentGroupRef.current.updateWorldMatrix(true, false);
+    const parentWorldMatrix = new THREE.Matrix4().copy(parentGroupRef.current.matrixWorld);
+    console.log("Parent World Matrix:", parentWorldMatrix.elements);
+
+    // Calculate parent group's world position (center)
+    const parentWorldPos = new THREE.Vector3().setFromMatrixPosition(parentWorldMatrix);
+    console.log("Parent World Pos:", parentWorldPos.toArray());
+
+    // Calculate OverlayItem's world position
+    const localPos = new THREE.Vector3(positionX, positionY, positionZ);
+    const overlayWorldPos = localPos.clone().applyMatrix4(parentWorldMatrix);
+    console.log("OverlayItem World Pos:", overlayWorldPos.toArray());
+
+    // Determine the "up" direction of the parent group
+    const upVector = new THREE.Vector3(0, 1, 0);
+    const worldUpVector = upVector.clone().applyMatrix4(parentWorldMatrix).normalize();
+    console.log("World Up Vector:", worldUpVector.toArray());
+
+    // Determine the "right" direction for horizontal offset
+    const rightVector = new THREE.Vector3(1, 0, 0);
+    const worldRightVector = rightVector.clone().applyMatrix4(parentWorldMatrix).normalize();
+    console.log("World Right Vector:", worldRightVector.toArray());
+
+    // Position camera above the parent group
+    const offsetDistance = 5;
+    const cameraTargetPos = parentWorldPos.clone().add(worldUpVector.multiplyScalar(offsetDistance));
+    const horizontalOffset = 2;
+    cameraTargetPos.add(worldRightVector.multiplyScalar(horizontalOffset));
+    console.log("Camera Target Pos (with offset):", cameraTargetPos.toArray());
+
+    // Animate camera to the target position
+    const startPos = camera.position.clone();
+    animate(0, 1, {
+      duration: 1,
+      onUpdate: (t) => {
+        camera.position.lerpVectors(startPos, cameraTargetPos, t);
+        camera.updateProjectionMatrix();
+      },
+    });
+
+    // Look at OverlayItem's world position
+    camera.lookAt(overlayWorldPos);
+    camera.updateProjectionMatrix();
+    console.log("Camera LookAt:", overlayWorldPos.toArray());
+
+    // Compute bounding box of balconyGroupRef
+    const boundingBox = new THREE.Box3().setFromObject(parentGroupRef.current);
+    const boxSize = boundingBox.getSize(new THREE.Vector3());
+    console.log("Balcony Group Bounding Box:", {
+      min: boundingBox.min.toArray(),
+      max: boundingBox.max.toArray(),
+      size: boxSize.toArray(),
+      center: boundingBox.getCenter(new THREE.Vector3()).toArray(),
+    });
+
+    // Rotate OverlayItem to face the camera
+    if (groupRef.current) {
+      const cameraDirection = new THREE.Vector3()
+        .subVectors(cameraTargetPos, overlayWorldPos)
+        .normalize();
+      const quaternion = new THREE.Quaternion().setFromUnitVectors(
+        new THREE.Vector3(0, 0, 1),
+        cameraDirection
+      );
+      const initialQuaternion = new THREE.Quaternion().setFromEuler(
+        new THREE.Euler(rotationX, rotationY, rotationZ, 'XYZ')
+      );
+      const finalQuaternion = initialQuaternion.multiply(quaternion);
+
+      const startQuaternion = groupRef.current.quaternion.clone();
+      animate(0, 1, {
+        duration: 1,
+        onUpdate: (t) => {
+          if (groupRef.current) {
+            const lerpedQuaternion = new THREE.Quaternion().slerpQuaternions(
+              startQuaternion,
+              finalQuaternion,
+              t
+            );
+            groupRef.current.quaternion.copy(lerpedQuaternion);
+          }
+        },
+        onComplete: () => {
+          console.log("Rotation animation completed");
+        },
+      });
+      console.log("OverlayItem Target Quaternion:", [
+        finalQuaternion.x,
+        finalQuaternion.y,
+        finalQuaternion.z,
+        finalQuaternion.w,
+      ]);
+    } else {
+      console.warn("groupRef.current is undefined, skipping rotation");
+    }
+
+    // Store camera target
+    setCameraTarget({
+      position: cameraTargetPos.toArray(),
+      lookAt: overlayWorldPos.toArray(),
+    });
+
+    setTimeout(() => {
+      console.log("Final Camera Pos:", camera.position.toArray());
+
+
+      setShowContent(true); // Show content after animation
+      setIsAnimating(false);
+    }, 1000);
+  };
+
+  const handleResetClick = (e) => {
+    e.stopPropagation();
+    console.log("Reset Button Clicked!");
+    if (typeof setIsAnimating !== "function") {
+      console.error("setIsAnimating is not a function:", setIsAnimating);
+      return;
+    }
+    setIsAnimating(true);
+
+    if (!initialCameraState.current.position || !initialCameraState.current.quaternion) {
+      console.warn("Initial camera state not found, using fallback position");
+      const fallbackPos = new THREE.Vector3(-11, -1, -2);
+      animate(0, 1, {
+        duration: 1,
+        onUpdate: (t) => {
+          camera.position.lerpVectors(camera.position, fallbackPos, t);
+          camera.updateProjectionMatrix();
+        },
+      });
+      camera.lookAt(-11, -4, -2);
+      camera.updateProjectionMatrix();
+      setTimeout(() => {
+        console.log("Fallback Reset Camera Pos:", camera.position.toArray());
+        setIsAnimating(false);
+      }, 1000);
+      return;
+    }
+
+    // Adjust initial position
+    const adjustedPos = initialCameraState.current.position.clone();
+    adjustedPos.z += 0;
+    console.log("Adjusted Reset Camera Pos:", adjustedPos.toArray());
+
+    // Animate camera to adjusted position
+    const startPos = camera.position.clone();
+    animate(0, 1, {
+      duration: 1,
+      onUpdate: (t) => {
+        camera.position.lerpVectors(startPos, adjustedPos, t);
+        camera.updateProjectionMatrix();
+      },
+    });
+
+    // Animate camera rotation
+    const startQuaternion = camera.quaternion.clone();
+    const targetQuaternion = initialCameraState.current.quaternion;
+    animate(0, 1, {
+      duration: 1,
+      onUpdate: (t) => {
+        camera.quaternion.slerpQuaternions(startQuaternion, targetQuaternion, t);
+        camera.updateProjectionMatrix();
+      },
+    });
+
+    // Reset OverlayItem rotation
+    if (groupRef.current) {
+      const initialQuaternion = new THREE.Quaternion().setFromEuler(
+        new THREE.Euler(rotationX, rotationY, rotationZ, 'XYZ')
+      );
+      const startOverlayQuaternion = groupRef.current.quaternion.clone();
+      animate(0, 1, {
+        duration: 1,
+        onUpdate: (t) => {
+          if (groupRef.current) {
+            const lerpedQuaternion = new THREE.Quaternion().slerpQuaternions(
+              startOverlayQuaternion,
+              initialQuaternion,
+              t
+            );
+            groupRef.current.quaternion.copy(lerpedQuaternion);
+          }
+        },
+        onComplete: () => {
+          console.log("OverlayItem rotation reset completed");
+        },
+      });
+    } else {
+      console.warn("groupRef.current is undefined, skipping rotation reset");
+    }
+
+    // Clear camera target
+    setCameraTarget(null);
+
+    setTimeout(() => {
+      console.log("Reset Camera Pos:", camera.position.toArray());
+       setIsClickable(true); // Re-enable Add to Cart button
+      setIsAnimating(false);
+      setShowContent(false); // Hide content on reset
+    }, 1000);
+  };
+
+  const handlePointerDown = (e) => {
+    e.stopPropagation();
+    console.log("Html Pointer Down:", e);
+  };
+
+  const handleTestClick = (e) => {
+    e.stopPropagation();
+    console.log("Test Button Clicked!");
+  };
+
+  return (
+    <group
+      ref={groupRef}
+      position={[positionX, positionY, positionZ]}
+      rotation={[rotationX, rotationY, rotationZ]}
+    >
+      <Html
+        transform
+        distanceFactor={5}
+        center
+        zIndexRange={[100, 1000]}
+        occlude="blending"
+        className={`w-64 h-48 rounded-md overflow-hidden transition-opacity duration-1000 ${className}`}
+        {...props}
+      >
+        <div
+          className="text-sm p-2 w-full relative"
+          style={{ pointerEvents: "auto" }}
+        >
+          {showContent ? (
+  <div className="bg-white bg-opacity-90 backdrop-blur-2xl p-2 rounded-md">
+    <button
+      className="absolute top-2 right-2 w-6 h-6 bg-gray-500 hover:bg-gray-600 text-white rounded-full flex items-center justify-center"
+      style={{ pointerEvents: "auto" }}
+      onClick={handleResetClick}
+      title="Reset View"
+    >
+      <svg
+        xmlns="http://www.w3.org/2000/svg"
+        fill="none"
+        viewBox="0 0 24 24"
+        stroke="currentColor"
+        className="w-4 h-4"
+      >
+        <path
+          strokeLinecap="round"
+          strokeLinejoin="round"
+          strokeWidth={2}
+          d="M4 4v5h5m-5 0l8 8m0 0l8-8m-8 8V9"
+        />
+      </svg>
+    </button>
+    <h2 className="font-bold">{title}</h2>
+    <p>{description}</p>
+    <button
+      className="bg-blue-500 hover:bg-opacity-50 transition-colors duration-500 px-4 py-2 font-bold text-white w-full text-xs mt-2"
+      style={{ pointerEvents: "auto" }}
+      onClick={handleTestClick}
+    >
+      Test Click
+    </button>
+  </div>
+) : (
+  <button
+  disabled={!isClickable}
+  className={`${bgColor} hover:bg-opacity-50 transition-colors duration-500 px-4 py-2 font-bold text-white w-full text-xs mt-2 ${
+    !isClickable ? 'opacity-50 cursor-not-allowed' : ''
+  }`}
+  style={{ pointerEvents: isClickable ? "auto" : "none" }}
+  onClick={handleButtonClick}
+>
+    Add to cart ${price}
+  </button>
+)}
+
+        </div>
+      </Html>
+    </group>
+  );
+};
+
+
+export default OverlayItem;
 
 
 
