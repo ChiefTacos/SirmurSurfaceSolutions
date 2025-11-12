@@ -18,6 +18,7 @@ function App() {
   const [started, setStarted] = useState(false);
   const [menuOpened, setMenuOpened] = useState(false);
   const [isDay, setIsDay] = useState(true); // true = day, false = night
+  const [isAnimating, setIsAnimating] = useState(false); // New state
 
   useEffect(() => {
     setMenuOpened(false);
@@ -37,10 +38,10 @@ function App() {
           <DayNightSky debugForceDay={isDay} />
           <ScrollControls pages={4} damping={0.1}>
             <ScrollManager section={section} onSectionChange={setSection} />
-            <Experience section={section} menuOpened={menuOpened} isDay={isDay} />
-            <Scroll html>
+            <Experience section={section} menuOpened={menuOpened} isDay={isDay} setIsAnimating={setIsAnimating} />
+            {/* <Scroll html>
               <Interface setSection={setSection} />
-            </Scroll>
+            </Scroll> */}
           </ScrollControls>
         </Canvas>
         <Menu

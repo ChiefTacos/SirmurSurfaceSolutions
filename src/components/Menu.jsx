@@ -23,7 +23,7 @@ export const Menu = (props) => {
       <button
         onClick={() => setMenuOpened(!menuOpened)}
         className={`
-           z-20 fixed top-8 right-12 p-3 w-16 h-16 rounded-md 
+           z-[10000] fixed top-8 right-8 lg:right-12 p-3 w-16 h-16 rounded-md 
           transition-transform duration-300 ease-in-out transform overflow-hidden
           ${menuOpened ? "rotate-45 translate-y-0.5" : "rotate-0 translate-y-0"}
         `}
@@ -39,7 +39,7 @@ export const Menu = (props) => {
       {/* MENU PANEL – mobile only, scrollable */}
       <div
         className={`
-           z-10 fixed inset-y-0 right-0 transition-all overflow-y-auto
+           z-[9999] fixed inset-y-0 right-0 transition-all overflow-y-auto
           flex flex-col bg-blue
         `}
         

@@ -11,27 +11,31 @@ import { Avatar } from "./Avatar";
 import { Office } from "./Office";
 import { Projects } from "./Projects";
 import { MuscleCar } from "./MuscleCar";
-import { RVmodel } from "./Rv";
+// import { RVmodel } from "./Rv";
 
 export const Experience = (props) => {
-  const { menuOpened, isDay } = props;
-  const { viewport } = useThree();
+  const { menuOpened, isDay, isAnimating, setIsAnimating } = props;
+  const { viewport, camera } = useThree();
   const data = useScroll();
 
-
   const [section, setSection] = useState(0);
+  const [cameraTarget, setCameraTarget] = useState(null); // Store OverlayItem camera target
 
-  const cameraPositionX = useMotionValue();
-  const cameraLookAtX = useMotionValue();
 
-  useEffect(() => {
-    animate(cameraPositionX, menuOpened ? -5 : 0, {
-      ...framerMotionConfig,
-    });
-    animate(cameraLookAtX, menuOpened ? 5 : 0, {
-      ...framerMotionConfig,
-    });
-  }, [menuOpened]);
+  const cameraPositionX = useMotionValue(0); // Initialize with 0
+  const cameraLookAtX = useMotionValue(0); // Initialize with 0
+
+
+
+  //old logic for moving menu 5 units back and forth but buggy with 3d text signs
+  // useEffect(() => {
+  //   animate(cameraPositionX, menuOpened ? -5 : 0, {
+  //     ...framerMotionConfig,
+  //   });
+  //   animate(cameraLookAtX, menuOpened ? 5 : 0, {
+  //     ...framerMotionConfig,
+  //   });
+  // }, [menuOpened]);
 
   const characterContainerAboutRef = useRef();
 
@@ -54,8 +58,24 @@ export const Experience = (props) => {
       setSection(curSection);
     }
 
-    state.camera.position.x = cameraPositionX.get();
-    state.camera.lookAt(cameraLookAtX.get(), 0, 0);
+    // Only update camera if not animating
+    // if (!isAnimating) {
+    //   state.camera.position.x = cameraPositionX.get();
+    //   state.camera.lookAt(cameraLookAtX.get(), 0, 0);
+    // }
+
+    if (!isAnimating && cameraTarget) {
+      // Maintain OverlayItem's camera position and lookAt
+      console.log("Applying cameraTarget:", cameraTarget);
+      camera.position.set(...cameraTarget.position);
+      camera.lookAt(...cameraTarget.lookAt);
+      camera.updateProjectionMatrix();
+    } else if (!isAnimating) {
+      // Default behavior when no OverlayItem is active
+      camera.position.x = cameraPositionX.get();
+      camera.lookAt(cameraLookAtX.get(), 0, 0);
+      camera.updateProjectionMatrix();
+    }
 
     // const position = new THREE.Vector3();
     // characterContainerAboutRef.current.getWorldPosition(position);
@@ -130,7 +150,7 @@ export const Experience = (props) => {
 
 
       >
-        <Office section={section} />
+        <Office section={section} menuOpened={menuOpened} isDay={isDay} setIsAnimating={setIsAnimating} setCameraTarget={setCameraTarget}  />
         <MuscleCar />
          {/* <RVmodel />  */}
          
