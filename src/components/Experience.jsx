@@ -119,7 +119,7 @@ export const Experience = (props) => {
       </motion.group>
       <ambientLight intensity={1} />
       <motion.group
-        position={[8, 1, -4]}
+        position={[8, 1, -2]}
         scale={[1, 1, 1]}
         
         
