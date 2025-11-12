@@ -10,13 +10,15 @@ import { framerMotionConfig } from "../config";
 import { Avatar } from "./Avatar";
 import { Office } from "./Office";
 import { Projects } from "./Projects";
-// import { MuscleCar } from "./MuscleCar";
+import { MuscleCar } from "./MuscleCar";
 import { RVmodel } from "./Rv";
 
 export const Experience = (props) => {
   const { menuOpened } = props;
   const { viewport } = useThree();
   const data = useScroll();
+
+
 
   const [section, setSection] = useState(0);
 
@@ -70,6 +72,7 @@ export const Experience = (props) => {
 
   return (
     <>
+    
       <motion.group
         position={[1.9072935059634513, 0.14400000000000002, 2.681801948466054]}
         rotation={[-3.141592653589793, 1.2053981633974482, 3.141592653589793]}
@@ -121,21 +124,22 @@ export const Experience = (props) => {
         
         
          animate={{
-            rotateY: section === 2 ? 0 : Math.PI / 5,
+            rotateY: section === 2 ? 0 : Math.PI / 7,
 
          }}
 
 
       >
         <Office section={section} />
-        {/* <MuscleCar /> */}
-         <RVmodel /> 
-        <group
+        <MuscleCar />
+         {/* <RVmodel />  */}
+         
+        {/* <group
           ref={characterContainerAboutRef}
           name="CharacterSpot"
           position={[0.07, 0.16, -0.57]}
           rotation={[-Math.PI, 0.42, -Math.PI]}
-        ></group>
+        ></group> */}
       </motion.group>
 
 

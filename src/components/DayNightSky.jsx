@@ -259,7 +259,7 @@ export const DayNightSky = ({
   /* ---------- Text mask (off-screen canvas) ---------- */
   const textTexture = useMemo(() => {
     const canvas = document.createElement("canvas");
-    const size = 1920;
+    const size = 2120;
     canvas.width = canvas.height = size;
     const ctx = canvas.getContext("2d") ?? (function () {
       throw new Error("2D context unavailable");
@@ -272,7 +272,7 @@ export const DayNightSky = ({
     ctx.font = "bold 200px 'Orbitron', sans-serif";
 
     const lines = [
-      "★☆  S I R M U R  ★☆",
+      "★☆  B A D G E R  ★☆",
       "★  S U R F A C E  ★",
       "☆  S O L U T I O N S  ☆",
     ];

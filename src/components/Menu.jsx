@@ -1,4 +1,5 @@
 
+import GoogleReviewsBox from './GoogleReviewsBox';
 
 
 import { DayNightToggle } from "./DayNightToggle";
@@ -12,13 +13,17 @@ export const Menu = (props) => {
     setIsDay,
   } = props;
 
+  const apiKey = import.meta.env.VITE_GOOGLE_API_KEY;
+  const placeId = import.meta.env.VITE_GOOGLE_PLACE_ID;
+  console.log('API Key:', apiKey);
+  console.log('Place ID:', placeId);
   return (
     <>
       {/* HAMBURGER – always visible on mobile */}
       <button
         onClick={() => setMenuOpened(!menuOpened)}
         className={`
-           z-20 fixed top-8 right-8 p-3 w-16 h-16 rounded-md 
+           z-20 fixed top-8 right-12 p-3 w-16 h-16 rounded-md 
           transition-transform duration-300 ease-in-out transform overflow-hidden
           ${menuOpened ? "rotate-45 translate-y-0.5" : "rotate-0 translate-y-0"}
         `}
@@ -36,9 +41,14 @@ export const Menu = (props) => {
         className={`
            z-10 fixed inset-y-0 right-0 transition-all overflow-y-auto
           flex flex-col bg-blue
-          ${menuOpened ? "w-96" : "w-0"}
         `}
+        
         style={{
+          width: menuOpened
+      ? window.innerWidth < 768
+        ? "100%" // Mobile: Full width
+        : "500px" // Desktop: Fixed width
+      : "0px",
           // background: "#7a1a3a",
           // backgroundImage: "linear-gradient(0deg, #4D041A 0%, #4A0A2D 100%)",
         }}
@@ -61,7 +71,8 @@ export const Menu = (props) => {
             <DayNightToggle isDay={isDay} setIsDay={setIsDay} />
           </div>
         )}
-
+        {/* GOOGLE REVIEWS */}
+        {menuOpened && <GoogleReviewsBox placeId={placeId} apiKey={apiKey} />}
 
         {/* PHONE + COPYRIGHT */}
         <div className="mb-2 pb-0 text-center flex flex-col items-center">
