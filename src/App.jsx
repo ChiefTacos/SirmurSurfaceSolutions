@@ -37,7 +37,7 @@ function App() {
           <DayNightSky debugForceDay={isDay} />
           <ScrollControls pages={4} damping={0.1}>
             <ScrollManager section={section} onSectionChange={setSection} />
-            <Experience section={section} menuOpened={menuOpened} />
+            <Experience section={section} menuOpened={menuOpened} isDay={isDay} />
             <Scroll html>
               <Interface setSection={setSection} />
             </Scroll>

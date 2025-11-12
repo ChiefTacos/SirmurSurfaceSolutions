@@ -14,10 +14,9 @@ import { MuscleCar } from "./MuscleCar";
 import { RVmodel } from "./Rv";
 
 export const Experience = (props) => {
-  const { menuOpened } = props;
+  const { menuOpened, isDay } = props;
   const { viewport } = useThree();
   const data = useScroll();
-
 
 
   const [section, setSection] = useState(0);
@@ -72,7 +71,8 @@ export const Experience = (props) => {
 
   return (
     <>
-    
+      <ambientLight intensity={isDay ? 1.1: 1.8} />
+
       <motion.group
         position={[1.9072935059634513, 0.14400000000000002, 2.681801948466054]}
         rotation={[-3.141592653589793, 1.2053981633974482, 3.141592653589793]}
@@ -117,7 +117,7 @@ export const Experience = (props) => {
       >
         <Avatar animation={characterAnimation} />
       </motion.group>
-      <ambientLight intensity={1} />
+      {/* <ambientLight intensity={1.4} /> */}
       <motion.group
         position={[8, 1, -2]}
         scale={[1, 1, 1]}
@@ -140,10 +140,12 @@ export const Experience = (props) => {
           position={[0.07, 0.16, -0.57]}
           rotation={[-Math.PI, 0.42, -Math.PI]}
         ></group> */}
+        
       </motion.group>
 
 
       <Projects />
+      
     </>
   );
 };
