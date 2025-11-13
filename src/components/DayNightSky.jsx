@@ -295,7 +295,7 @@ export const DayNightSky = ({
     () => ({
       topColor: { value: new THREE.Color("#ff8c42") },
       midColor: { value: new THREE.Color("#ff6b6b") },
-      bottomColor: { value: new THREE.Color("#cd4e57") },
+      bottomColor: { value: new THREE.Color("#52b1ff") },
       sunColor: { value: new THREE.Color("#ffaa00") },
       sunPosition: { value: new THREE.Vector2(0.1, 0.86) },
       sunBaseSize: { value: 0.08 },
