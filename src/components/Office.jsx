@@ -17,6 +17,7 @@ const OverlayItem = ({
   rotationX = 0,
   rotationY = 0,
   rotationZ = 0,
+  distanceFactor = 25,        // ← new prop, default 20
   parentGroupRef, 
   setIsAnimating,
   setCameraTarget, // New prop to store camera target
@@ -236,82 +237,107 @@ const DISTANCE_OUT = props.cameraDistance || 5;
       position={[positionX, positionY, positionZ]}
       rotation={[rotationX, rotationY, rotationZ]}
     >
-      {/* <Html
-        transform
-        distanceFactor={5}
-        center
-        zIndexRange={[100, 1000]}
-        occlude="blending"
-        className={`w-64 h-48 rounded-md overflow-hidden transition-opacity duration-1000 ${className}`}
-        {...props}
-      > */}
+     
+     
+     {/* old working mac os html */}
       <Html
-        // Remove transform → no 3D movement
-        // Use portal to render in fixed DOM
-        portal={{ current: gl.domElement.parentNode }}
-        style={{
-          position: "absolute",
-          top: "50%",
-          left: "50%",
-          transform: "translate(-50%, -50%)",
-          width: "16rem", // 256px
-          pointerEvents: "auto",
-        }}
-                center
-        distanceFactor={20}
-      >
-        <div
-          className="text-sm p-2 w-full relative"
+  portal={{ current: gl.domElement.parentNode }}
+  style={{
+    position: "absolute",
+    top: "50%",
+    left: "50%",
+    transform: "translate(-50%, -50%)",
+    width: "22rem",
+    pointerEvents: "none",
+    zIndex: "101",
+  }}
+  center
+  distanceFactor={distanceFactor}     // was 20 → makes everything bigger
+  occlude={false}       // disables distance-based auto-scaling → same size everywhere
+>
+  <div className="text-sm w-full relative" style={{ pointerEvents: "none" }}>
+    {showContent ? (
+      <div className="bg-white w-full min-h-[520px] rounded-lg shadow-2xl border border-gray-200 overflow-hidden ">
+        <div className="flex p-3 gap-2 bg-gray-100">
+          <button onClick={handleResetClick} style={{ pointerEvents: "auto" }}>
+            <span className="bg-red-500 inline-block w-4 h-4 rounded-full hover:bg-red-600 transition"></span>
+          </button>
+          <div className="w-4 h-4 rounded-full bg-yellow-500"></div>
+          <div className="w-4 h-4 rounded-full bg-green-500"></div>
+        </div>
+
+        <div className="p-10 flex flex-col items-center justify-center gap-10 pt-1">
+          <button
+          type="submit"
+          className="flex justify-center top-96 gap-2 items-center mx-auto shadow-xl text-lg bg-gray-50 backdrop-blur-md lg:font-semibold isolation-auto border-gray-50 before:absolute before:w-full before:transition-all before:duration-700 before:hover:w-full before:-left-full before:hover:left-0 before:rounded-full before:bg-emerald-500 hover:text-gray-50 before:-z-10 before:aspect-square before:hover:scale-150 before:hover:duration-700 relative z-10 px-4 py-2 overflow-hidden border-2 rounded-full group"
           style={{ pointerEvents: "auto" }}
         >
-          {showContent ? (
-  <div className="bg-white bg-opacity-90 backdrop-blur-2xl p-2 rounded-md">
-    <button
-      className="absolute top-2 right-2 w-6 h-6 bg-gray-500 hover:bg-gray-600 text-white rounded-full flex items-center justify-center"
-      style={{ pointerEvents: "auto" }}
-      onClick={handleResetClick}
-      title="Reset View"
-    >
-      <svg
-        xmlns="http://www.w3.org/2000/svg"
-        fill="none"
-        viewBox="0 0 24 24"
-        stroke="currentColor"
-        className="w-4 h-4"
-      >
-        <path
-          strokeLinecap="round"
-          strokeLinejoin="round"
-          strokeWidth={2}
-          d="M4 4v5h5m-5 0l8 8m0 0l8-8m-8 8V9"
-        />
-      </svg>
-    </button>
-    <h2 className="font-bold">{title}</h2>
-    <p>{description}</p>
-    <button
-      className="bg-blue-500 hover:bg-opacity-50 transition-colors duration-500 px-4 py-2 font-bold text-white w-full text-xs mt-2"
-      style={{ pointerEvents: "auto" }}
-      onClick={handleTestClick}
-    >
-      Test Click
-    </button>
-  </div>
-) : (
-  <button
-  disabled={!isClickable}
-  className={`${bgColor} hover:bg-opacity-50 transition-colors duration-500 px-4 py-2 font-bold text-white w-full text-xs mt-2 ${
-    !isClickable ? 'opacity-50 cursor-not-allowed' : ''
-  }`}
-  style={{ pointerEvents: isClickable ? "auto" : "none" }}
-  onClick={handleButtonClick}
->
-    Add to cart ${price}
-  </button>
-)}
+          Additional Info
+          <svg
+            className="w-8 h-8 justify-end group-hover:rotate-90 group-hover:bg-gray-50 text-gray-50 ease-linear duration-300 rounded-full border border-gray-700 group-hover:border-none p-2 rotate-45"
+            viewBox="0 0 16 19"
+            xmlns="http://www.w3.org/2000/svg"
+          >
+            <path
+              d="M7 18C7 18.5523 7.44772 19 8 19C8.55228 19 9 18.5523 9 18H7ZM8.70711 0.292893C8.31658 -0.0976311 7.68342 -0.0976311 7.29289 0.292893L0.928932 6.65685C0.538408 7.04738 0.538408 7.68054 0.928932 8.07107C1.31946 8.46159 1.95262 8.46159 2.34315 8.07107L8 2.41421L13.6569 8.07107C14.0474 8.46159 14.6805 8.46159 15.0711 8.07107C15.4616 7.68054 15.4616 7.04738 15.0711 6.65685L8.70711 0.292893ZM9 18L9 1H7L7 18H9Z"
+              className="fill-gray-800 group-hover:fill-gray-800"
+            ></path>
+          </svg>
+        </button>
 
+          <div className="card__content text-center">
+            <h1 className="text-5xl font-bold mb-4">{title}</h1>
+            <p className="text-2xl text-gray-700 mb-2">{description}</p>
+            {price && <p className="text-4xl font-bold text-emerald-600">${price}</p>}
+            <p className="mt-8 text-xl text-gray-500">placeholder text</p>
+          </div>
+          
         </div>
-      </Html>
+      </div>
+    ) : (
+     
+      <div className="flex items-center justify-center">
+    <div 
+      className="relative group"
+      style={{
+        pointerEvents: isClickable ? "auto" : "none",  // Blocks ALL interaction (hover + click)
+        opacity: isClickable ? 1 : 0.4,
+        transition: "opacity 0.4s ease",
+      }}
+    >
+      <button
+        className="relative inline-block p-px font-semibold leading-6 text-white bg-neutral-200 shadow-2xl cursor-pointer rounded-2xl shadow-emerald-900 transition-all duration-300 ease-in-out hover:scale-105 active:scale-95 hover:shadow-emerald-600"
+        type="button"
+        onClick={handleButtonClick}
+        onPointerDown={(e) => e.stopPropagation()}
+        style={{
+          cursor: isClickable ? "pointer" : "not-allowed",
+        }}
+        // Remove the inline transform hacks — we control everything from parent now
+      >
+        <span className="absolute inset-0 rounded-2xl bg-gradient-to-r from-emerald-500 via-cyan-500 to-sky-600 p-[2px] opacity-0 transition-opacity duration-500 group-hover:opacity-100"></span>
+
+        <span className="relative z-10 block px-8 py-4 rounded-2xl bg-neutral-950">
+          <div className="relative z-10 flex items-center space-x-3">
+            <span className="transition-all duration-500 group-hover:translate-x-1.5 group-hover:text-emerald-300 text-lg font-medium">
+              View Service
+            </span>
+            <svg
+              xmlns="http://www.w3.org/2000/svg"
+              viewBox="0 0 24 24"
+              fill="currentColor"
+              className="w-7 h-7 transition-all duration-500 group-hover:translate-x-1.5 group-hover:text-emerald-300"
+            >
+              <path d="M16.172 11l-5.364-5.364 1.414-1.414L20 12l-7.778 7.778-1.414-1.414L16.172 13H4v-2z" />
+            </svg>
+          </div>
+        </span>
+      </button>
+    </div>
+  </div>
+    )}
+  </div>
+</Html>
     </group>
   );
 };
@@ -356,7 +382,7 @@ function SquareComponent({ position, rotation, scale }) {
     </mesh>
   );
 }
-export function Office({ section, menuOpened, isDay, setIsAnimating, setCameraTarget, ...props }) {
+export function Office({ section, menuOpened, isDay, setIsAnimating, setCameraTarget, activeOverlayId, setActiveOverlayId, ...props }) {
   const group = useRef();
   const balconyRailGroupRef = useRef();
   const deckFloorGroupRef = useRef();
@@ -456,6 +482,7 @@ export function Office({ section, menuOpened, isDay, setIsAnimating, setCameraTa
       >
         <mesh geometry={nodes.Balcony_rail_glass001_House_material_0.geometry} material={materials.House_material} />
         <OverlayItem
+        id="balcony"                     // ← give each one a unique string
           key="balcony-rail"
           rotationX={Math.PI / 2}
           rotationY={-Math.PI / 2}
@@ -472,6 +499,8 @@ export function Office({ section, menuOpened, isDay, setIsAnimating, setCameraTa
           setCameraTarget={setCameraTarget}
           cameraHeight={4}
   cameraDistance={1}
+  activeOverlayId={activeOverlayId}
+  setActiveOverlayId={setActiveOverlayId}
         />
       </group>
         <group position={[400, 200, 0]} rotation={[-Math.PI / 2, 0, 0]} scale={100}>
@@ -539,25 +568,7 @@ export function Office({ section, menuOpened, isDay, setIsAnimating, setCameraTa
         <mesh geometry={nodes.Balcony_wall_2_House_material_0.geometry} material={materials.House_material} position={[400, 200, 0]} rotation={[-Math.PI / 2, 0, 0]} scale={100} />
 
         {/* deck */}
-{/* <group position={[0, 200, 0]} rotation={[-Math.PI / 2, 0, Math.PI / 2]} scale={100} ref={balconyGroupRef}>
-          <mesh geometry={nodes.Balcony_wood_floor_House_material_0.geometry} material={materials.House_material} />
-          <OverlayItem
-            rotationX={Math.PI / 2}
-            rotationY={-Math.PI / 2}
-            rotationZ={0}
-            positionX={1.2}
-            positionY={-0.1}
-            positionZ={1.2}
-            title={"Deck cleaning"}
-            description={"Scrib scrub"}
-            price={"250-500"}
-            bgColor={"bg-yellow-500"}
-            className={"transition delay-1000"}
-            parentGroupRef={balconyGroupRef}
-            setIsAnimating={setIsAnimating}
-            setCameraTarget={setCameraTarget} 
-          />
-        </group> */}
+
         <group
         position={[0, 200, 0]}
         rotation={[-Math.PI / 2, 0, Math.PI / 2]}
@@ -566,6 +577,7 @@ export function Office({ section, menuOpened, isDay, setIsAnimating, setCameraTa
       >
         <mesh geometry={nodes.Balcony_wood_floor_House_material_0.geometry} material={materials.House_material} />
         <OverlayItem
+        id="deck"                     // ← give each one a unique string
           key="deck-floor"
           rotationX={Math.PI / 2}
           rotationY={-Math.PI / 2}
@@ -580,6 +592,8 @@ export function Office({ section, menuOpened, isDay, setIsAnimating, setCameraTa
           parentGroupRef={deckFloorGroupRef}
           setIsAnimating={setIsAnimating}
           setCameraTarget={setCameraTarget}
+          activeOverlayId={activeOverlayId}
+  setActiveOverlayId={setActiveOverlayId}
         />
       </group>
 
@@ -594,6 +608,7 @@ export function Office({ section, menuOpened, isDay, setIsAnimating, setCameraTa
       >
         <mesh geometry={nodes.Driveway_House_material_0.geometry} material={materials.House_material} />
         <OverlayItem
+        id="driveway"                     // ← give each one a unique string
           key="driveway"
           rotationX={Math.PI / 2}
           rotationY={-Math.PI / 2}
@@ -610,6 +625,9 @@ export function Office({ section, menuOpened, isDay, setIsAnimating, setCameraTa
           setCameraTarget={setCameraTarget} 
           cameraHeight={2}
           cameraDistance={5}
+          distanceFactor={16}
+          activeOverlayId={activeOverlayId}
+  setActiveOverlayId={setActiveOverlayId}
         />
       </group>
         {/* <group position={[-4.128, 0, 305.314]} rotation={[-Math.PI / 2, 0, 0]} scale={100} ref={balconyGroupRef}>

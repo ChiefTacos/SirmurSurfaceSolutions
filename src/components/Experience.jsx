@@ -14,7 +14,7 @@ import { MuscleCar } from "./MuscleCar";
 // import { RVmodel } from "./Rv";
 
 export const Experience = (props) => {
-  const { menuOpened, isDay, isAnimating, setIsAnimating } = props;
+  const { menuOpened, isDay, isAnimating, setIsAnimating} = props;
   const { viewport, camera } = useThree();
   const data = useScroll();
 
@@ -145,13 +145,16 @@ export const Experience = (props) => {
         
         
          animate={{
-            rotateY: section === 2 ? 0 : Math.PI / 7,
+            // rotateY: section === 3 ? Math.PI / 5 : 0,
+            // rotateX: section === 3 ? Math.PI / -9 : 0,
+            rotateY: section === 3 ? 0 : 0,
+            rotateX: section === 3 ? 0 : 0,
 
          }}
 
 
       >
-        <Office section={section} menuOpened={menuOpened} isDay={isDay} setIsAnimating={setIsAnimating} setCameraTarget={setCameraTarget}  />
+        <Office section={section} menuOpened={menuOpened} isDay={isDay} setIsAnimating={setIsAnimating} setCameraTarget={setCameraTarget}   />
         <MuscleCar />
          {/* <RVmodel />  */}
          

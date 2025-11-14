@@ -1,56 +1,144 @@
+
+// old components/DayNightToggle.jsx
+// export const DayNightToggle = ({ isDay, setIsDay }) => {
+//   return (
+//     <label className="relative inline-flex items-center cursor-pointer select-none">
+//       {/* Hidden Checkbox (controls the toggle) */}
+//       <input
+//         type="checkbox"
+//         className="sr-only peer"
+//         checked={!isDay}              // night = checked
+//         onChange={() => setIsDay(!isDay)}
+//       />
+
+//       {/* Track */}
+//       <div
+//         className="
+//           w-[72px] h-[72px] rounded-full
+//           bg-gradient-to-r 
+//           from-yellow-300 to-orange-400
+//           peer-checked:from-blue-400 peer-checked:to-indigo-500
+//           transition-all duration-500
+//           relative
+//         "
+//       >
+//         {/* Thumb */}
+//         <div
+//           className="
+//             absolute top-2 left-2
+//             h-14 w-14 rounded-full bg-white shadow-md
+//             flex items-center justify-center text-lg
+//             transition-all duration-500
+//             peer-checked:translate-x-10
+//           "
+//         >
+//           {/* Sun & Moon icons handled by opacity */}
+//           <span
+//             className={`
+//               absolute transition-opacity duration-500 
+//               ${isDay ? "opacity-100" : "opacity-0"}
+//             `}
+//           >
+//             ☀️
+//           </span>
+
+//           <span
+//             className={`
+//               absolute transition-opacity duration-500 
+//               ${!isDay ? "opacity-100" : "opacity-0"}
+//             `}
+//           >
+//             🌙
+//           </span>
+//         </div>
+//       </div>
+
+//       {/* Optional text label */}
+//       {/* <span className="ml-3 text-sm font-medium text-gray-100">
+//         Change<hr />Theme/ <hr />
+//         Sky
+//       </span> */}
+//     </label>
+//   );
+// };
+
 // components/DayNightToggle.jsx
 export const DayNightToggle = ({ isDay, setIsDay }) => {
   return (
-    <button
-      // onClick={() => setIsDay((prev) => !prev)}
-      onClick={() => setIsDay(!isDay)}
+    <div
       className={`
-        w-24 h-24 lg:w-36 lg:h-36 rounded-full
-        flex items-center justify-center
-        shadow-lg
-        transition-all duration-500 ease-in-out
-        transform hover:scale-110 active:scale-95
-        border-2 border-white/30
-        ${isDay
-          ? "bg-gradient-to-br from-yellow-300 via-orange-400 to-amber-500 text-yellow-900"
-          : "bg-gradient-to-br from-slate-900 via-indigo-900 to-purple-900 text-indigo-200"
-        }
+        w-48 aspect-video rounded-xl border-4 border-[#121331]
+        transition-all duration-500 z-10000
+        ${!isDay ? "bg-[#3a3347]" : "bg-[#ebe6ef]"}
       `}
     >
-      
-      <div className="relative w-full h-full flex items-center justify-center">
-        <span
-  className={`
-    absolute text-lg transition-all duration-500
-    ${isDay 
-      ? "opacity-100 scale-100" 
-      : "opacity-0 scale-0"
-    }`}
->
-  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" className="w-full h-full" fill="currentColor">
-    <circle cx="12" cy="12" r="5"/>
-    <line x1="12" y1="1" x2="12" y2="3" stroke="currentColor" strokeWidth="1" strokeLinecap="round"/>
-    <line x1="12" y1="21" x2="12" y2="23" stroke="currentColor" strokeWidth="1" strokeLinecap="round"/>
-    <line x1="4.1" y1="4.1" x2="5.5" y2="5.5" stroke="currentColor" strokeWidth="1" strokeLinecap="round"/>
-    <line x1="18.5" y1="18.5" x2="19.9" y2="19.9" stroke="currentColor" strokeWidth="1" strokeLinecap="round"/>
-    <line x1="1" y1="12" x2="3" y2="12" stroke="currentColor" strokeWidth="1" strokeLinecap="round"/>
-    <line x1="21" y1="12" x2="23" y2="12" stroke="currentColor" strokeWidth="1" strokeLinecap="round"/>
-    <line x1="4.1" y1="19.9" x2="5.5" y2="18.5" stroke="currentColor" strokeWidth="1" strokeLinecap="round"/>
-    <line x1="18.5" y1="5.5" x2="19.9" y2="4.1" stroke="currentColor" strokeWidth="1" strokeLinecap="round"/>
-  </svg>
-</span>
+      <div className="flex h-full w-full px-2 items-center gap-x-2">
+        {/* Left Circle */}
+        <div className="w-6 h-6 flex-shrink-0 rounded-full border-4 border-[#121331]" />
 
-        <span className={`absolute text-2xl transition-all duration-500
-          ${!isDay ? "opacity-100 scale-100 rotate-0" : "opacity-0 scale-0 -rotate-180"}`}>
-          
-        </span>
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="3em" height="3em" fill="currentColor">
-  <path d="M21 12.5a8.5 8.5 0 0 1-14.85 5.65 7 7 0 1 0 0-11.3A8.5 8.5 0 0 1 21 12.5z"/>
-</svg>
+        {/* SWITCH (clickable area) */}
+        <label
+          className={`
+            w-full h-10 border-4 border-[#121331] rounded cursor-pointer
+            transition-transform duration-500
+            ${!isDay ? "scale-x-[-1]" : "scale-x-[1]"}
+          `}
+        >
+          <input
+            type="checkbox"
+            className="hidden"
+            checked={!isDay}        // night = checked
+            onChange={() => setIsDay(!isDay)}
+          />
+
+          {/* Inside switch */}
+          <div className="w-full h-full bg-[#f24c00] relative overflow-hidden">
+
+            {/* Triangle top */}
+            <div
+              className="
+                w-0 h-0 z-10000
+                border-l-[24px] border-l-transparent
+                border-r-[24px] border-r-transparent
+                border-t-[20px] border-t-[#121331]
+                relative
+              "
+            >
+              <div
+                className="
+                  w-0 h-0 absolute
+                  border-l-[18px] border-l-transparent
+                  border-r-[18px] border-r-transparent
+                  border-t-[15px] border-t-[#e44901]
+                  -top-5 -left-[18px]
+                "
+              />
+            </div>
+
+            {/* Orange slanted box left */}
+            <div
+              className="
+                w-[24px] h-9 z-10000 absolute top-[9px] left-0 bg-[#f24c00]
+                border-r-2 border-b-4 border-[#121331]
+                transform skew-y-[39deg]
+              "
+            />
+
+            {/* Orange slanted box right */}
+            <div
+              className="
+                w-[25px] h-9 z-10000 absolute top-[9px] left-[24px] bg-[#c44002]
+                border-r-4 border-l-2 border-b-4 border-[#121331]
+                transform skew-y-[-39deg]
+              "
+            />
+          </div>
+        </label>
+
+        {/* Right bar */}
+        <div className="w-6 h-1 flex-shrink-0 bg-[#121331] rounded-full"></div>
       </div>
-
-
-
-    </button>
+    </div>
   );
 };
+
