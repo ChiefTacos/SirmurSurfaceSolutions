@@ -29,6 +29,23 @@ const groupRef = useRef(); // Ref for the THREE.Group
 const initialCameraState = useRef({ position: null, quaternion: null });
 const [showContent, setShowContent] = useState(false); // State to control visibility
 const [isClickable, setIsClickable] = useState(true); //prevent bug when going reseting while animation runs
+// This will store the TRUE original camera state (once, when the scene loads)
+  const originalCameraState = useRef({
+    position: null,
+    quaternion: null
+  });
+
+  // Capture the original camera position/rotation exactly once
+  useEffect(() => {
+    if (!originalCameraState.current.position) {
+      originalCameraState.current = {
+        position: camera.position.clone(),
+        quaternion: camera.quaternion.clone(),
+      };
+      console.log("Original scene camera saved:", originalCameraState.current.position.toArray());
+    }
+  }, [camera]);
+
 
 const handleButtonClick = (e) => {
   e.stopPropagation();
@@ -91,6 +108,8 @@ const DISTANCE_OUT = props.cameraDistance || 5;
     }
   });
 
+
+
   // === Rotate OverlayItem to face camera ===
   // if (groupRef.current) {
   //   const cameraDir = new THREE.Vector3()
@@ -130,96 +149,59 @@ const DISTANCE_OUT = props.cameraDistance || 5;
     setIsAnimating(false);
   }, 1000);
 };
-  const handleResetClick = (e) => {
+
+const handleResetClick = (e) => {
     e.stopPropagation();
-    console.log("Reset Button Clicked!");
-    if (typeof setIsAnimating !== "function") {
-      console.error("setIsAnimating is not a function:", setIsAnimating);
-      return;
-    }
+    console.log("Reset clicked → returning to original scene camera");
+
     setIsAnimating(true);
-
-    if (!initialCameraState.current.position || !initialCameraState.current.quaternion) {
-      console.warn("Initial camera state not found, using fallback position");
-      const fallbackPos = new THREE.Vector3(-11, -1, -2);
-      animate(0, 1, {
-        duration: 1,
-        onUpdate: (t) => {
-          camera.position.lerpVectors(camera.position, fallbackPos, t);
-          camera.updateProjectionMatrix();
-        },
-      });
-      camera.lookAt(-11, -4, -2);
-      camera.updateProjectionMatrix();
-      setTimeout(() => {
-        console.log("Fallback Reset Camera Pos:", camera.position.toArray());
-        setIsAnimating(false);
-      }, 1000);
-      return;
-    }
-
-    // Adjust initial position
-    const adjustedPos = initialCameraState.current.position.clone();
-    adjustedPos.z += 0;
-    console.log("Adjusted Reset Camera Pos:", adjustedPos.toArray());
-
-    // Animate camera to adjusted position
-    const startPos = camera.position.clone();
-    animate(0, 1, {
-      duration: 1,
-      onUpdate: (t) => {
-        camera.position.lerpVectors(startPos, adjustedPos, t);
-        camera.updateProjectionMatrix();
-      },
-    });
-
-    // Animate camera rotation
-    const startQuaternion = camera.quaternion.clone();
-    const targetQuaternion = initialCameraState.current.quaternion;
-    animate(0, 1, {
-      duration: 1,
-      onUpdate: (t) => {
-        camera.quaternion.slerpQuaternions(startQuaternion, targetQuaternion, t);
-        camera.updateProjectionMatrix();
-      },
-    });
-
-    // Reset OverlayItem rotation
-    if (groupRef.current) {
-      const initialQuaternion = new THREE.Quaternion().setFromEuler(
-        new THREE.Euler(rotationX, rotationY, rotationZ, 'XYZ')
-      );
-      const startOverlayQuaternion = groupRef.current.quaternion.clone();
-      animate(0, 1, {
-        duration: 1,
-        onUpdate: (t) => {
-          if (groupRef.current) {
-            const lerpedQuaternion = new THREE.Quaternion().slerpQuaternions(
-              startOverlayQuaternion,
-              initialQuaternion,
-              t
-            );
-            groupRef.current.quaternion.copy(lerpedQuaternion);
-          }
-        },
-        onComplete: () => {
-          console.log("OverlayItem rotation reset completed");
-        },
-      });
-    } else {
-      console.warn("groupRef.current is undefined, skipping rotation reset");
-    }
-
-    // Clear camera target
+    setShowContent(false);
     setCameraTarget(null);
 
-    setTimeout(() => {
-      console.log("Reset Camera Pos:", camera.position.toArray());
-       setIsClickable(true); // Re-enable Add to Cart button
+    // If for some reason we don't have the original state yet, skip or use fallback
+    if (!originalCameraState.current.position) {
+      console.warn("Original camera state not ready yet");
       setIsAnimating(false);
-      setShowContent(false); // Hide content on reset
-    }, 1000);
+      return;
+    }
+
+    const targetPos = originalCameraState.current.position.clone();
+    const targetQuat = originalCameraState.current.quaternion.clone();
+
+    const startPos = camera.position.clone();
+    const startQuat = camera.quaternion.clone();
+
+    // Animate both position + rotation in one smooth animation
+    animate(0, 1, {
+      duration: 1.2,
+      onUpdate: (t) => {
+        camera.position.lerpVectors(startPos, targetPos, t);
+        camera.quaternion.slerpQuaternions(startQuat, targetQuat, t);
+        camera.updateProjectionMatrix();
+      },
+      onComplete: () => {
+        setIsClickable(true);
+        setIsAnimating(false);
+        console.log("Back to original camera:", camera.position.toArray());
+      }
+    });
+
+    // Reset the overlay item rotation back to its original props
+    if (groupRef.current) {
+      const initialQuat = new THREE.Quaternion().setFromEuler(
+        new THREE.Euler(rotationX, rotationY, rotationZ)
+      );
+      const currentQuat = groupRef.current.quaternion.clone();
+
+      animate(0, 1, {
+        duration: 1,
+        onUpdate: (t) => {
+          groupRef.current.quaternion.slerpQuaternions(currentQuat, initialQuat, t);
+        }
+      });
+    }
   };
+
 
   const handlePointerDown = (e) => {
     e.stopPropagation();
@@ -240,7 +222,7 @@ const DISTANCE_OUT = props.cameraDistance || 5;
      
      
      {/* old working mac os html */}
-      <Html
+      {/* <Html
   portal={{ current: gl.domElement.parentNode }}
   style={{
     position: "absolute",
@@ -249,13 +231,28 @@ const DISTANCE_OUT = props.cameraDistance || 5;
     transform: "translate(-50%, -50%)",
     width: "22rem",
     pointerEvents: "none",
-    zIndex: "101",
+    zIndex: "1",
   }}
   center
   distanceFactor={distanceFactor}     // was 20 → makes everything bigger
   occlude={false}       // disables distance-based auto-scaling → same size everywhere
->
-  <div className="text-sm w-full relative" style={{ pointerEvents: "none" }}>
+> */}
+ 
+ <Html
+portal={{ current: document.getElementById("overlay-portal") }}  
+  style={{
+    position: "fixed",
+    top: 0,
+    left: 0,
+    width: "100vw",
+    height: "100vh",
+    pointerEvents: "none",
+    zIndex: 10,                           // low = under menu
+  }}
+  center
+  distanceFactor={distanceFactor}
+  occlude={false}
+> <div className="text-sm w-full relative" style={{ pointerEvents: "none" }}>
     {showContent ? (
       <div className="bg-white w-full min-h-[520px] rounded-lg shadow-2xl border border-gray-200 overflow-hidden ">
         <div className="flex p-3 gap-2 bg-gray-100">
@@ -489,7 +486,7 @@ export function Office({ section, menuOpened, isDay, setIsAnimating, setCameraTa
           rotationZ={0}
           positionX={1.2}
           positionY={-0.1}
-          positionZ={1.2}
+          positionZ={-7.2}
           title="Balcony Rail Cleaning"
           description="Glass + frame scrub"
           price="250-500"
@@ -584,7 +581,7 @@ export function Office({ section, menuOpened, isDay, setIsAnimating, setCameraTa
           rotationZ={0}
           positionX={1.2}
           positionY={-0.1}
-          positionZ={1.2}
+          positionZ={-5.2}
           title="Deck Floor Cleaning"
           description="Power wash + seal"
           price="400-800"
@@ -615,7 +612,7 @@ export function Office({ section, menuOpened, isDay, setIsAnimating, setCameraTa
           rotationZ={0}
           positionX={0.2}
           positionY={-5.1}
-          positionZ={2.4}
+          positionZ={-3.4}
           title="Driveway Cleaning"
           description="Oil stains + power wash"
           price="300-600"

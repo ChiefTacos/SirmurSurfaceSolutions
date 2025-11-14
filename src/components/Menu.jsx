@@ -12,6 +12,7 @@ export const Menu = (props) => {
     isDay,
     setIsDay,
     reset3D,
+    section,
   } = props;
 
   const apiKey = import.meta.env.VITE_GOOGLE_API_KEY;
@@ -40,7 +41,7 @@ export const Menu = (props) => {
       {/* MENU PANEL – mobile only, scrollable */}
       <div
         className={`
-           z-[9999] fixed inset-y-0 right-0 transition-all overflow-y-auto
+           z-[10001] fixed inset-y-0 right-0 transition-all overflow-y-auto
           flex flex-col bg-blue
         `}
         
@@ -56,7 +57,10 @@ export const Menu = (props) => {
       >
         {/* MENU ITEMS – centered text */}
 <div className="flex-1 flex flex-col items-center justify-center gap-12 mt-8">
-  <MenuButton label="Home" onClick={() => { onSectionChange(0); reset3D();            
+  <MenuButton label="Home" onClick={() => { onSectionChange(0); reset3D();   
+    if (section === 0) {
+      setMenuOpened(false);
+    }         
   }}
    className="text-white text-stroke-black text-5xl font-bold cursor-pointer hover:text-indigo-600 transition-colors" />
   <MenuButton label="Free Quote"   onClick={() => onSectionChange(1)}

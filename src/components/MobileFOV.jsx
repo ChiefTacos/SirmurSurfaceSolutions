@@ -21,9 +21,9 @@ export const MobileFOV = () => {
 
   useEffect(() => {
     if (isMobile) {
-      camera.fov = 96; // Wider FOV on mobile
+      camera.fov = 102; // Wider FOV on mobile
     } else {
-      camera.fov = 833; // Desktop FOV
+      camera.fov = 99; // Desktop FOV
     }
     camera.updateProjectionMatrix();
   }, [isMobile, camera]);

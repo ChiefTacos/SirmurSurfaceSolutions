@@ -30,7 +30,10 @@ function App() {
   return (
     <>
       <LoadingScreen started={started} setStarted={setStarted} />
-      <MotionConfig transition={{ ...framerMotionConfig }}>
+<div 
+  id="overlay-portal" 
+  className="fixed inset-0 pointer-events-none z-50"
+/>      <MotionConfig transition={{ ...framerMotionConfig }}>
         <Canvas
           key={canvasKey}
           shadows
@@ -51,7 +54,7 @@ function App() {
          <a
         href="tel:+12622305182"
         aria-label="Call us"
-        className="fixed bottom-20 right-20 z-[10001]"
+        className="fixed bottom-20 right-20 z-[10002]"
       >
 
         {/* always there phone button */}
@@ -101,7 +104,6 @@ Call or Message us!   </div>
 </button>
 
         </a>
-
         <Menu
           onSectionChange={setSection}
           menuOpened={menuOpened}
@@ -109,6 +111,7 @@ Call or Message us!   </div>
           isDay={isDay}
           setIsDay={setIsDay}
           reset3D={reset3D}
+          section={section}
         />
         <Cursor />
       </MotionConfig>
