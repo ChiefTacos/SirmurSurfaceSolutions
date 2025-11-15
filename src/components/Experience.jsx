@@ -14,7 +14,7 @@ import { MuscleCar } from "./MuscleCar";
 // import { RVmodel } from "./Rv";
 
 export const Experience = (props) => {
-  const { menuOpened, isDay, isAnimating, setIsAnimating} = props;
+  const { menuOpened, isDay, isAnimating, setIsAnimating, onResetCamera, onResetOverlays} = props;
   const { viewport, camera } = useThree();
   const data = useScroll();
 
@@ -25,8 +25,64 @@ export const Experience = (props) => {
   const cameraPositionX = useMotionValue(0); // Initialize with 0
   const cameraLookAtX = useMotionValue(0); // Initialize with 0
 
+const overlayResetFns = useRef([]);   // ← THIS for menu closing overlays
+
+  const originalCameraState = useRef({
+    position: camera.position.clone(),
+    quaternion: camera.quaternion.clone(),
+  });
+
+// Capture original camera once
+  useEffect(() => {
+    if (!originalCameraState.current.position.lengthSq()) {
+      originalCameraState.current = {
+        position: camera.position.clone(),
+        quaternion: camera.quaternion.clone(),
+      };
+    }
+  }, [camera]);
+
+  // Expose camera reset
+  useEffect(() => {
+    if (onResetCamera) {
+      onResetCamera(() => {
+        const startPos = camera.position.clone();
+        const startQuat = camera.quaternion.clone();
+
+        animate(0, 1, {
+          duration: 1.4,
+          ease: "easeInOut",
+          onUpdate: (t) => {
+            camera.position.lerpVectors(startPos, originalCameraState.current.position, t);
+            camera.quaternion.slerpQuaternions(startQuat, originalCameraState.current.quaternion, t);
+            camera.updateProjectionMatrix();
+          },
+        });
+      });
+    }
+  }, [camera, onResetCamera]);
+
+  // Expose overlay reset collector
+  useEffect(() => {
+    if (onResetOverlays) {
+      onResetOverlays(() => {
+        overlayResetFns.current.forEach(fn => fn());
+        overlayResetFns.current = []; // clear after reset
+// ADD THIS LINE — clears the shared camera target
+        setCameraTarget(null);
+      });
+    }
+  }, [onResetOverlays, setCameraTarget]);
 
 
+
+
+
+  
+  // Pass down a way for OverlayItem to register its reset function
+  const registerOverlayReset = (resetFn) => {
+    overlayResetFns.current.push(resetFn);
+  };
   //old logic for moving menu 5 units back and forth but buggy with 3d text signs
   // useEffect(() => {
   //   animate(cameraPositionX, menuOpened ? -5 : 0, {
@@ -154,7 +210,7 @@ export const Experience = (props) => {
 
 
       >
-        <Office section={section} menuOpened={menuOpened} isDay={isDay} setIsAnimating={setIsAnimating} setCameraTarget={setCameraTarget}   />
+        <Office section={section} menuOpened={menuOpened} isDay={isDay} setIsAnimating={setIsAnimating} setCameraTarget={setCameraTarget}  registerOverlayReset={registerOverlayReset} />
         <MuscleCar />
          {/* <RVmodel />  */}
          

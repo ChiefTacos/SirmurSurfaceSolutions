@@ -13,6 +13,8 @@ export const Menu = (props) => {
     setIsDay,
     reset3D,
     section,
+    resetCamera,
+    resetOverlays,
   } = props;
 
   const apiKey = import.meta.env.VITE_GOOGLE_API_KEY;
@@ -57,10 +59,11 @@ export const Menu = (props) => {
       >
         {/* MENU ITEMS – centered text */}
 <div className="flex-1 flex flex-col items-center justify-center gap-12 mt-8">
-  <MenuButton label="Home" onClick={() => { onSectionChange(0); reset3D();   
-    if (section === 0) {
-      setMenuOpened(false);
-    }         
+  <MenuButton label="Home" onClick={() => { onSectionChange(0);     setMenuOpened(false);         
+    resetOverlays();          
+      resetCamera();   
+   
+  
   }}
    className="text-white text-stroke-black text-5xl font-bold cursor-pointer hover:text-indigo-600 transition-colors" />
   <MenuButton label="Free Quote"   onClick={() => onSectionChange(1)}

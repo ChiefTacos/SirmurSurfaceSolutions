@@ -2,7 +2,7 @@ import { ScrollControls, Scroll } from "@react-three/drei";
 import { Canvas } from "@react-three/fiber";
 import { MotionConfig } from "framer-motion";
 import { Leva } from "leva";
-import { useEffect, useState } from "react";
+import { useEffect, useState, useRef } from "react";
 import { Cursor } from "./components/Cursor";
 import { Experience } from "./components/Experience";
 import { Interface } from "./components/Interface";
@@ -22,6 +22,9 @@ function App() {
   const [canvasKey, setCanvasKey] = useState(0);
    const reset3D = () => setCanvasKey(k => k + 1);
 
+
+const resetCameraRef =  useRef(() => {});//home button camera reset
+const resetOverlaysRef = useRef(() => {});   // ← NEW with other one
 
   useEffect(() => {
     setMenuOpened(false);
@@ -45,10 +48,14 @@ function App() {
           <DayNightSky debugForceDay={isDay} />
           <ScrollControls pages={4} damping={0.1}>
             <ScrollManager section={section} onSectionChange={setSection} />
-            <Experience section={section} menuOpened={menuOpened} isDay={isDay} setIsAnimating={setIsAnimating} />
-            {/* <Scroll html>
+            <Experience section={section} menuOpened={menuOpened} isDay={isDay} setIsAnimating={setIsAnimating}
+             // This lets Experience give us the reset function
+              onResetCamera={(fn) => { resetCameraRef.current = fn }}
+              onResetOverlays={(fn) => { resetOverlaysRef.current = fn }}
+              />
+            <Scroll html>
               <Interface setSection={setSection} />
-            </Scroll> */}
+            </Scroll>
           </ScrollControls>
         </Canvas>
          <a
@@ -112,6 +119,8 @@ Call or Message us!   </div>
           setIsDay={setIsDay}
           reset3D={reset3D}
           section={section}
+          resetCamera={resetCameraRef.current}   
+          resetOverlays={resetOverlaysRef.current}   
         />
         <Cursor />
       </MotionConfig>

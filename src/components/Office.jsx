@@ -21,6 +21,7 @@ const OverlayItem = ({
   parentGroupRef, 
   setIsAnimating,
   setCameraTarget, // New prop to store camera target
+  registerOverlayReset,
   ...props
 }) => {
   const { camera, gl } = useThree();
@@ -45,6 +46,18 @@ const [isClickable, setIsClickable] = useState(true); //prevent bug when going r
       console.log("Original scene camera saved:", originalCameraState.current.position.toArray());
     }
   }, [camera]);
+useEffect(() => {
+  if (props.registerOverlayReset) {
+    props.registerOverlayReset(() => {
+      setShowContent(false);
+      setIsClickable(true);
+      setCameraTarget(null);
+      // Also run the local smooth reset if needed
+      handleResetClick({ stopPropagation: () => {} });
+    });
+  }
+}, [props.registerOverlayReset]);
+
 
 
 const handleButtonClick = (e) => {
