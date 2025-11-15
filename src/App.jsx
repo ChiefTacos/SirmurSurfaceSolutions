@@ -26,9 +26,28 @@ function App() {
 const resetCameraRef =  useRef(() => {});//home button camera reset
 const resetOverlaysRef = useRef(() => {});   // ← NEW with other one
 
-  useEffect(() => {
-    setMenuOpened(false);
-  }, [section]);
+      useEffect(() => {
+        setMenuOpened(false);
+      }, [section]);
+      
+      useEffect(() => {
+        const isMobile = window.innerWidth < 1024;
+
+        if (isMobile && section === 0) {
+          // Lock all scroll + touchmove
+          document.body.style.overflow = "hidden";
+          document.body.style.touchAction = "none"; // disable pan, pinch, swipe
+        } else {
+          // Restore
+          document.body.style.overflow = "";
+          document.body.style.touchAction = "";
+        }
+
+        return () => {
+          document.body.style.overflow = "";
+          document.body.style.touchAction = "";
+        };
+      }, [section]);
 
   return (
     <>
@@ -36,7 +55,7 @@ const resetOverlaysRef = useRef(() => {});   // ← NEW with other one
 <div 
   id="overlay-portal" 
   className="fixed inset-0 pointer-events-none z-50"
-/>      <MotionConfig transition={{ ...framerMotionConfig }}>
+></div>    <MotionConfig transition={{ ...framerMotionConfig }}>
         <Canvas
           key={canvasKey}
           shadows
@@ -48,10 +67,10 @@ const resetOverlaysRef = useRef(() => {});   // ← NEW with other one
           <DayNightSky debugForceDay={isDay} />
           <ScrollControls pages={4} damping={0.1}>
             <ScrollManager section={section} onSectionChange={setSection} />
-            <Experience section={section} menuOpened={menuOpened} isDay={isDay} setIsAnimating={setIsAnimating}
+            <Experience section={section} menuOpened={menuOpened} isDay={isDay} setIsAnimating={setIsAnimating} 
              // This lets Experience give us the reset function
               onResetCamera={(fn) => { resetCameraRef.current = fn }}
-              onResetOverlays={(fn) => { resetOverlaysRef.current = fn }}
+              onResetOverlays={(fn) => { resetOverlaysRef.current = fn }} 
               />
             <Scroll html>
               <Interface setSection={setSection} />
