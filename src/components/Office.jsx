@@ -406,7 +406,7 @@ const snapBackIntoBounds = () => {
             position: "fixed",
             top: 0,
             left: 0,
-            width: "70vw",
+            width: "100vw",
             height: "100vh",
             pointerEvents: "none",
             zIndex: 10,                           // low = under menu
@@ -418,7 +418,16 @@ const snapBackIntoBounds = () => {
           <div className="text-sm w-full relative" style={{ pointerEvents: "none" }}>
               {showContent ? (
                 <div
-                className="bg-white w-full min-h-[520px] rounded-lg shadow-2xl border border-gray-200 overflow-hidden"
+                className="bg-white  rounded-lg shadow-2xl border border-gray-200 overflow-hidden
+                   min-h-[110vh]
+                   lg:min-h-[90vh]
+
+                  min-w-[120vw]     /* mobile first */
+                  md:min-w-[1000px] md:max-w-[1150px]  /* tablet */
+                  lg:min-w-[1200px] lg:max-w-[1400px]  /* desktop */
+
+                "
+
                   onPointerDown={handleDragStart}
 
 
@@ -436,10 +445,15 @@ const snapBackIntoBounds = () => {
 
         <div className="flex p-3 gap-2 bg-gray-100">
           <button onClick={handleResetClick} style={{ pointerEvents: "auto" }}>
-            <span className="bg-red-500 inline-block w-4 h-4 rounded-full hover:bg-red-600 transition"></span>
+            <span className="bg-red-500 inline-block w-6 h-6 rounded-full hover:bg-red-600 transition"></span>
+          
           </button>
-          <div className="w-4 h-4 rounded-full bg-yellow-500"></div>
-          <div className="w-4 h-4 rounded-full bg-green-500"></div>
+          <button onClick={handleResetClick} style={{ pointerEvents: "auto" }}>
+            <span className="bg-yellow-500 inline-block w-6 h-6 rounded-full hover:bg-red-600 transition"></span>
+          
+          </button>
+          {/* <div className="w-4 h-4 rounded-full bg-yellow-500"></div> */}
+          {/* <div className="w-4 h-4 rounded-full bg-green-500"></div> */}
         </div>
 
         <div className="p-10 flex flex-col items-center justify-center gap-10 pt-1">
