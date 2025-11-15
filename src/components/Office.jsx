@@ -5,6 +5,11 @@ import { animate, useMotionValue } from "framer-motion";
 import { useEffect, useRef, useState } from "react";
 import * as THREE from "three";
 
+
+
+
+
+
 const OverlayItem = ({
   className = "",
   title,
@@ -30,6 +35,18 @@ const groupRef = useRef(); // Ref for the THREE.Group
 const initialCameraState = useRef({ position: null, quaternion: null });
 const [showContent, setShowContent] = useState(false); // State to control visibility
 const [isClickable, setIsClickable] = useState(true); //prevent bug when going reseting while animation runs
+
+const [windowPos, setWindowPos] = useState({ x: 0, y: 0 });
+const dragOffset = useRef({ x: 0, y: 0 });
+const isDragging = useRef(false);
+const lastPos = useRef({ x: 0, y: 0 });
+const velocity = useRef({ x: 0, y: 0 });
+const lastTimestamp = useRef(0);
+
+const friction = 0.92; // momentum decay
+const minVelocity = 0.1; // stop threshold
+
+
 // This will store the TRUE original camera state (once, when the scene loads)
   const originalCameraState = useRef({
     position: null,
@@ -123,32 +140,6 @@ const DISTANCE_OUT = props.cameraDistance || 5;
 
 
 
-  // === Rotate OverlayItem to face camera ===
-  // if (groupRef.current) {
-  //   const cameraDir = new THREE.Vector3()
-  //     .subVectors(cameraTargetPos, overlayWorldPos)
-  //     .normalize();
-
-  //   const faceQuat = new THREE.Quaternion().setFromUnitVectors(
-  //     new THREE.Vector3(0, 0, 1), // default forward
-  //     cameraDir
-  //   );
-
-  //   const initialQuat = new THREE.Quaternion().setFromEuler(
-  //     new THREE.Euler(rotationX, rotationY, rotationZ)
-  //   );
-  //   const targetQuat = initialQuat.multiply(faceQuat);
-
-  //   const startQuat = groupRef.current.quaternion.clone();
-  //   animate(0, 1, {
-  //     duration: 1,
-  //     onUpdate: (t) => {
-  //       if (groupRef.current) {
-  //         groupRef.current.quaternion.slerpQuaternions(startQuat, targetQuat, t);
-  //       }
-  //     },
-  //   });
-  // }
 
   // Store for external use (e.g. orbit controls)
   setCameraTarget({
@@ -216,6 +207,128 @@ const handleResetClick = (e) => {
   };
 
 
+
+// const handleDragStart = (e) => {
+//   e.stopPropagation();
+//   isDragging.current = true;
+
+//   const x = e.clientX;
+//   const y = e.clientY;
+
+//   dragOffset.current = {
+//     x: x - windowPos.x,
+//     y: y - windowPos.y,
+//   };
+
+//   document.addEventListener("pointermove", handleDragMove);
+//   document.addEventListener("pointerup", handleDragEnd);
+// };
+
+// const handleDragMove = (e) => {
+//   if (!isDragging.current) return;
+
+//   const x = e.clientX;
+//   const y = e.clientY;
+
+//   setWindowPos({
+//     x: x - dragOffset.current.x,
+//     y: y - dragOffset.current.y,
+//   });
+// };
+
+// const handleDragEnd = () => {
+//   isDragging.current = false;
+//   document.removeEventListener("pointermove", handleDragMove);
+//   document.removeEventListener("pointerup", handleDragEnd);
+// };
+const handleDragStart = (e) => {
+  e.stopPropagation();
+  isDragging.current = true;
+
+  lastPos.current = { x: e.clientX, y: e.clientY };
+  velocity.current = { x: 0, y: 0 };
+  lastTimestamp.current = performance.now();
+
+  document.addEventListener("pointermove", handleDragMove);
+  document.addEventListener("pointerup", handleDragEnd);
+};
+const handleDragMove = (e) => {
+  if (!isDragging.current) return;
+
+  const now = performance.now();
+  const dt = now - lastTimestamp.current;
+
+  const dx = e.clientX - lastPos.current.x;
+  const dy = e.clientY - lastPos.current.y;
+
+  setWindowPos((prev) => ({
+    x: prev.x + dx,
+    y: prev.y + dy,
+  }));
+
+  velocity.current = {
+    x: dx / dt,
+    y: dy / dt,
+  };
+
+  lastPos.current = { x: e.clientX, y: e.clientY };
+  lastTimestamp.current = now;
+};
+const handleDragEnd = () => {
+  isDragging.current = false;
+
+  document.removeEventListener("pointermove", handleDragMove);
+  document.removeEventListener("pointerup", handleDragEnd);
+
+  requestAnimationFrame(mobileMomentum);
+};
+const mobileMomentum = () => {
+  if (isDragging.current) return; // safety
+
+  const v = velocity.current;
+
+  // if velocity is basically zero, begin boundary snap only
+  if (Math.abs(v.x) < minVelocity && Math.abs(v.y) < minVelocity) {
+    snapBackIntoBounds();
+    return;
+  }
+
+  // apply friction for momentum movement
+  setWindowPos((prev) => ({
+    x: prev.x + v.x * 20,
+    y: prev.y + v.y * 20,
+  }));
+
+  // decay velocity
+  velocity.current = {
+    x: v.x * friction,
+    y: v.y * friction,
+  };
+
+  requestAnimationFrame(mobileMomentum);
+};
+const snapBackIntoBounds = () => {
+  const padding = 20;
+  const width = window.innerWidth;
+  const height = window.innerHeight;
+
+  setWindowPos((prev) => {
+    let x = prev.x;
+    let y = prev.y;
+
+    if (x < padding) x = padding;
+    if (x > width - padding) x = width - padding;
+
+    if (y < padding) y = padding;
+    if (y > height - padding) y = height - padding;
+
+    return { x, y };
+  });
+};
+
+
+
+
   const handlePointerDown = (e) => {
     e.stopPropagation();
     console.log("Html Pointer Down:", e);
@@ -251,23 +364,40 @@ const handleResetClick = (e) => {
   occlude={false}       // disables distance-based auto-scaling → same size everywhere
 > */}
  
- <Html
-portal={{ current: document.getElementById("overlay-portal") }}  
-  style={{
-    position: "fixed",
-    top: 0,
-    left: 0,
-    width: "100vw",
-    height: "100vh",
-    pointerEvents: "none",
-    zIndex: 10,                           // low = under menu
-  }}
-  center
-  distanceFactor={distanceFactor}
-  occlude={false}
-> <div className="text-sm w-full relative" style={{ pointerEvents: "none" }}>
-    {showContent ? (
-      <div className="bg-white w-full min-h-[520px] rounded-lg shadow-2xl border border-gray-200 overflow-hidden ">
+        <Html
+        portal={{ current: document.getElementById("overlay-portal") }}  
+          style={{
+            position: "fixed",
+            top: 0,
+            left: 0,
+            width: "70vw",
+            height: "100vh",
+            pointerEvents: "none",
+            zIndex: 10,                           // low = under menu
+          }}
+          center
+          distanceFactor={distanceFactor}
+          occlude={false}
+        > 
+          <div className="text-sm w-full relative" style={{ pointerEvents: "none" }}>
+              {showContent ? (
+                <div
+                className="bg-white w-full min-h-[520px] rounded-lg shadow-2xl border border-gray-200 overflow-hidden"
+                  onPointerDown={handleDragStart}
+
+
+                    style={{
+                    position: "absolute",
+                    left: windowPos.x,
+                    top: windowPos.y,
+                    transition: isDragging.current ? "none" : "transform 0.2s ease",
+                    cursor: "default",
+                    pointerEvents: "auto",
+                     userSelect: "none",
+                     webkitUserSelect: "none",
+            }}
+          >
+
         <div className="flex p-3 gap-2 bg-gray-100">
           <button onClick={handleResetClick} style={{ pointerEvents: "auto" }}>
             <span className="bg-red-500 inline-block w-4 h-4 rounded-full hover:bg-red-600 transition"></span>
@@ -316,7 +446,7 @@ portal={{ current: document.getElementById("overlay-portal") }}
       }}
     >
       <button
-        className="relative inline-block p-px font-semibold leading-6 text-white bg-neutral-200 shadow-2xl cursor-pointer rounded-2xl shadow-emerald-900 transition-all duration-300 ease-in-out hover:scale-105 active:scale-95 hover:shadow-emerald-600"
+        className="relative inline-block p-px font-semibold leading-6 text-white bg-neutral-200 shadow-2xl cursor-pointer rounded-2xl shadow-emerald-900 transition-all duration-300 ease-in-out hover:scale-105 active:scale-95 hover:shadow-emerald-600 z-[50]"
         type="button"
         onClick={handleButtonClick}
         onPointerDown={(e) => e.stopPropagation()}
@@ -354,6 +484,17 @@ portal={{ current: document.getElementById("overlay-portal") }}
 
 
 export default OverlayItem;
+
+
+
+
+
+
+
+
+
+
+
 
 
 
