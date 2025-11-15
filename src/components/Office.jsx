@@ -37,6 +37,7 @@ const [showContent, setShowContent] = useState(false); // State to control visib
 const [isClickable, setIsClickable] = useState(true); //prevent bug when going reseting while animation runs
 
 const [windowPos, setWindowPos] = useState({ x: 0, y: 0 });
+const htmlOffset = useRef({ x: 0, y: 0 });
 const dragOffset = useRef({ x: 0, y: 0 });
 const isDragging = useRef(false);
 const lastPos = useRef({ x: 0, y: 0 });
@@ -74,6 +75,23 @@ useEffect(() => {
     });
   }
 }, [props.registerOverlayReset]);
+// ⭐ ADDED — measure actual Html offset caused by `center`
+useEffect(() => {
+  // wait for next paint so Html fully exists
+  requestAnimationFrame(() => {
+    const portal = document.getElementById("overlay-portal");
+    if (!portal || !portal.firstChild) return;
+
+    const rect = portal.firstChild.getBoundingClientRect();
+
+    htmlOffset.current = {
+      x: rect.left,
+      y: rect.top,
+    };
+
+    console.log("HTML center offset:", htmlOffset.current);
+  });
+}, []);
 
 
 
@@ -316,11 +334,29 @@ const snapBackIntoBounds = () => {
     let x = prev.x;
     let y = prev.y;
 
-    if (x < padding) x = padding;
-    if (x > width - padding) x = width - padding;
+    // compensate for R3F center offset
+    const visualX = x + htmlOffset.current.x;
+    const visualY = y + htmlOffset.current.y;
 
-    if (y < padding) y = padding;
-    if (y > height - padding) y = height - padding;
+    // LEFT boundary
+    if (visualX < padding) {
+      x = padding - htmlOffset.current.x;
+    }
+
+    // RIGHT boundary
+    if (visualX > width - padding) {
+      x = width - padding - htmlOffset.current.x;
+    }
+
+    // TOP boundary
+    if (visualY < padding) {
+      y = padding - htmlOffset.current.y;
+    }
+
+    // BOTTOM boundary
+    if (visualY > height - padding) {
+      y = height - padding - htmlOffset.current.y;
+    }
 
     return { x, y };
   });
