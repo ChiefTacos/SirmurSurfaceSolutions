@@ -408,8 +408,9 @@ const snapBackIntoBounds = () => {
             left: 0,
             width: "100vw",
             height: "100vh",
-            pointerEvents: "none",
-            zIndex: 10,                           // low = under menu
+            zIndex: 10,                      
+            pointerEvents: props.section === 0 ? "auto" : "none",
+            opacity: props.section === 0 ? 1 : 0,
           }}
           center
           distanceFactor={distanceFactor}
@@ -687,9 +688,12 @@ export function Office({ section, menuOpened, isDay, setIsAnimating, setCameraTa
         rotation={[-Math.PI / 2, 0, Math.PI / 2]}
         scale={100}
         ref={balconyRailGroupRef}
+        visible={props.section === 0}
+
       >
         <mesh geometry={nodes.Balcony_rail_glass001_House_material_0.geometry} material={materials.House_material} />
         <OverlayItem
+          section={section}            
         id="balcony"                     // ← give each one a unique string
           key="balcony-rail"
           rotationX={Math.PI / 2}
@@ -706,9 +710,9 @@ export function Office({ section, menuOpened, isDay, setIsAnimating, setCameraTa
           setIsAnimating={setIsAnimating}
           setCameraTarget={setCameraTarget}
           cameraHeight={4}
-  cameraDistance={1}
-  activeOverlayId={activeOverlayId}
-  setActiveOverlayId={setActiveOverlayId}
+          cameraDistance={1}
+          activeOverlayId={activeOverlayId}
+          setActiveOverlayId={setActiveOverlayId}
         />
       </group>
         <group position={[400, 200, 0]} rotation={[-Math.PI / 2, 0, 0]} scale={100}>
@@ -782,10 +786,13 @@ export function Office({ section, menuOpened, isDay, setIsAnimating, setCameraTa
         rotation={[-Math.PI / 2, 0, Math.PI / 2]}
         scale={100}
         ref={deckFloorGroupRef}
+        visible={props.section === 0}
+
       >
         <mesh geometry={nodes.Balcony_wood_floor_House_material_0.geometry} material={materials.House_material} />
-        <OverlayItem
-        id="deck"                     // ← give each one a unique string
+          <OverlayItem
+          section={section}            
+          id="deck"                     // ← give each one a unique string
           key="deck-floor"
           rotationX={Math.PI / 2}
           rotationY={-Math.PI / 2}
@@ -801,7 +808,7 @@ export function Office({ section, menuOpened, isDay, setIsAnimating, setCameraTa
           setIsAnimating={setIsAnimating}
           setCameraTarget={setCameraTarget}
           activeOverlayId={activeOverlayId}
-  setActiveOverlayId={setActiveOverlayId}
+          setActiveOverlayId={setActiveOverlayId}
         />
       </group>
 
@@ -813,9 +820,12 @@ export function Office({ section, menuOpened, isDay, setIsAnimating, setCameraTa
         rotation={[-Math.PI / 2, 0, 0]}
         scale={100}
         ref={drivewayGroupRef}
+        visible={props.section === 0}
+
       >
         <mesh geometry={nodes.Driveway_House_material_0.geometry} material={materials.House_material} />
         <OverlayItem
+        section={section}            
         id="driveway"                     // ← give each one a unique string
           key="driveway"
           rotationX={Math.PI / 2}
