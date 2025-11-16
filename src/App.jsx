@@ -46,16 +46,13 @@ const resetOverlaysRef = useRef(() => {});   // ← NEW with other one
           // Disable scroll & touch for touch devices
           useEffect(() => {
             if (isTouchDevice) {
-              document.body.style.overflow = "hidden";
-              document.body.style.touchAction = "none";
+              document.body.style.overflow = "hidden";   // no scrolling page
             } else {
               document.body.style.overflow = "";
-              document.body.style.touchAction = "";
             }
 
             return () => {
               document.body.style.overflow = "";
-              document.body.style.touchAction = "";
             };
           }, [isTouchDevice]);
 
@@ -76,7 +73,7 @@ const resetOverlaysRef = useRef(() => {});   // ← NEW with other one
         >
           <MobileFOV />
           <DayNightSky debugForceDay={isDay} />
-          <ScrollControls pages={4} damping={0.1}>
+          <ScrollControls pages={4} damping={0.1}   >
             <ScrollManager section={section} onSectionChange={setSection} />
             <Experience section={section} menuOpened={menuOpened} isDay={isDay} setIsAnimating={setIsAnimating} 
              // This lets Experience give us the reset function
