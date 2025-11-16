@@ -1,7 +1,7 @@
 import { useScroll } from "@react-three/drei";
 import { useFrame } from "@react-three/fiber";
 import { gsap } from "gsap";
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useRef } from "react";
 
 export const ScrollManager = (props) => {
   const { section, onSectionChange } = props;
@@ -10,83 +10,45 @@ export const ScrollManager = (props) => {
   const lastScroll = useRef(0);
   const isAnimating = useRef(false);
 
-
-  // const [isTouchDevice, setIsTouchDevice] = useState(
-  //   window.innerWidth < 1024
-  // );
-
-  // useEffect(() => {
-  //   const check = () => setIsTouchDevice(window.innerWidth < 1024);
-  //   window.addEventListener("resize", check);
-  //   return () => window.removeEventListener("resize", check);
-  // }, []);
   data.fill.classList.add("top-0");
   data.fill.classList.add("absolute");
-  // ------------------------------
-  // INITIAL SCROLL ANIMATION
-  // ------------------------------
-      gsap.to(data.el, {
-        duration: 10,
-        ease: "power2.inOut",
-        onStart: () => { isAnimating.current = true },
-        onComplete: () => { isAnimating.current = false },
-      });
-  // ------------------------------
-  // SECTION SNAP (when buttons pressed)
-  // ------
-      useEffect(() => {
-        gsap.to(data.el, {
-          duration: 1,
-          scrollTop: section * data.el.clientHeight,
-          onStart: () => {
-            isAnimating.current = true;
-          },
-          onComplete: () => {
-            isAnimating.current = false;
-          },
-        });
-      }, [section]);
-      //MAIN LOOP
-      useFrame(() => {
-        if (isAnimating.current) {
-          lastScroll.current = data.scroll.current;
-          return;
-        }
+gsap.to(data.el, {
+  duration: 10,
+  ease: "power2.inOut",
+  onStart: () => { isAnimating.current = true },
+  onComplete: () => { isAnimating.current = false },
+});
+  useEffect(() => {
+    gsap.to(data.el, {
+      duration: 1,
+      scrollTop: section * data.el.clientHeight,
+      onStart: () => {
+        isAnimating.current = true;
+      },
+      onComplete: () => {
+        isAnimating.current = false;
+      },
+    });
+  }, [section]);
 
-   // ---------------------------------------
-    // MOBILE/TABLET MODE — HARD LOCK SCROLL
-    // ---------------------------------------
-    // if (isTouchDevice) {
-    //   const target = section * data.el.clientHeight;
+  useFrame(() => {
+    if (isAnimating.current) {
+      lastScroll.current = data.scroll.current;
+      return;
+    }
 
-    //   // keep the scroll stuck in place every frame
-    //   if (Math.abs(data.el.scrollTop - target) > 1) {
-    //     data.el.scrollTop = target;
-    //   }
-
-    //   // update scroll tracker anyway
-    //   lastScroll.current = data.scroll.current;
-    //   return; // <-- prevents section changes
-    // }
-
-    // -------------------------------
-    // Your original desktop scroll logic
-    // -------------------------------
-        const curSection = Math.floor(data.scroll.current * data.pages);
-        if (data.scroll.current > lastScroll.current && curSection === 0) {
-          onSectionChange(1);
-        }
-        if (
-          data.scroll.current < lastScroll.current &&
-          data.scroll.current < 1 / (data.pages - 1)
-        ) {
-          onSectionChange(0);
-        }
-        lastScroll.current = data.scroll.current;
-      });
-
-
+    const curSection = Math.floor(data.scroll.current * data.pages);
+    if (data.scroll.current > lastScroll.current && curSection === 0) {
+      onSectionChange(1);
+    }
+    if (
+      data.scroll.current < lastScroll.current &&
+      data.scroll.current < 1 / (data.pages - 1)
+    ) {
+      onSectionChange(0);
+    }
+    lastScroll.current = data.scroll.current;
+  });
 
   return null;
 };
-

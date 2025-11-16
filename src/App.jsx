@@ -29,40 +29,37 @@ const resetOverlaysRef = useRef(() => {});   // ← NEW with other one
       useEffect(() => {
         setMenuOpened(false);
       }, [section]);
-      const [isTouchDevice, setIsTouchDevice] = useState(false);
+      
+      useEffect(() => {
+        const isMobile = window.innerWidth < 1024;
 
-          // Detect mobile + tablet
-          useEffect(() => {
-            const checkDevice = () => {
-              setIsTouchDevice(window.innerWidth < 1024);
-            };
+        if (isMobile && section === 0) {
+          // Lock all scroll + touchmove
+          document.body.style.overflow = "hidden";
+          document.body.style.touchAction = "none"; // disable pan, pinch, swipe
+        } else {
+          // Restore
+          document.body.style.overflow = "";
+          document.body.style.touchAction = "";
+        }
 
-            checkDevice();
-            window.addEventListener("resize", checkDevice);
-
-            return () => window.removeEventListener("resize", checkDevice);
-          }, []);
-
-          // Disable scroll & touch for touch devices
-          useEffect(() => {
-            if (isTouchDevice) {
-              document.body.style.overflow = "hidden";   // no scrolling page
-            } else {
-              document.body.style.overflow = "";
-            }
-
-            return () => {
-              document.body.style.overflow = "";
-            };
-          }, [isTouchDevice]);
-
+        return () => {
+          document.body.style.overflow = "";
+          document.body.style.touchAction = "";
+        };
+      }, [section]);
 
   return (
     <>
       <LoadingScreen started={started} setStarted={setStarted} />
 <div 
-  id="overlay-portal" 
-  className="fixed inset-0 pointer-events-none z-50"
+  id="overlay-portals-root" 
+  style={{ 
+    position: "fixed",
+    inset: 0,
+    zIndex: 9999,
+    pointerEvents: "none"
+  }}
 ></div>    <MotionConfig transition={{ ...framerMotionConfig }}>
         <Canvas
           key={canvasKey}
@@ -73,7 +70,7 @@ const resetOverlaysRef = useRef(() => {});   // ← NEW with other one
         >
           <MobileFOV />
           <DayNightSky debugForceDay={isDay} />
-          <ScrollControls pages={4} damping={0.1}   >
+          <ScrollControls pages={4} damping={0.1}>
             <ScrollManager section={section} onSectionChange={setSection} />
             <Experience section={section} menuOpened={menuOpened} isDay={isDay} setIsAnimating={setIsAnimating} 
              // This lets Experience give us the reset function

@@ -1,4 +1,3 @@
-// import { useGLTF, useTexture, useVideoTexture, useAnimations, Html } from "@react-three/drei";
 import { useGLTF, useTexture, useVideoTexture, useAnimations, MeshTransmissionMaterial, Html  } from "@react-three/drei";
 import { useFrame, useThree } from "@react-three/fiber";
 import { animate, useMotionValue } from "framer-motion";
@@ -24,9 +23,8 @@ const OverlayItem = ({
   rotationZ = 0,
   distanceFactor = 25,        // ← new prop, default 20
   parentGroupRef, 
-  setIsAnimating,
-  setCameraTarget, // New prop to store camera target
   registerOverlayReset,
+  section,
   ...props
 }) => {
   const { camera, gl } = useThree();
@@ -43,9 +41,24 @@ const isDragging = useRef(false);
 const lastPos = useRef({ x: 0, y: 0 });
 const velocity = useRef({ x: 0, y: 0 });
 const lastTimestamp = useRef(0);
-
+const isVisible = section === 0;
 const friction = 0.92; // momentum decay
 const minVelocity = 0.1; // stop threshold
+
+const portalRoot = useRef(null);
+
+useEffect(() => {
+  // Create a unique div for THIS overlay instance
+  const div = document.createElement("div");
+  div.id = `overlay-portal-${Math.random().toString(36).substr(2, 9)}`;
+  document.getElementById("overlay-portals-root").appendChild(div);
+  portalRoot.current = div;
+
+  return () => {
+    // Cleanup on unmount
+    document.getElementById("overlay-portals-root")?.removeChild(div);
+  };
+}, []);
 
 
 // This will store the TRUE original camera state (once, when the scene loads)
@@ -75,190 +88,97 @@ useEffect(() => {
     });
   }
 }, [props.registerOverlayReset]);
-// ⭐ ADDED — measure actual Html offset caused by `center`
-useEffect(() => {
-  // wait for next paint so Html fully exists
-  requestAnimationFrame(() => {
-    const portal = document.getElementById("overlay-portal");
-    if (!portal || !portal.firstChild) return;
-
-    const rect = portal.firstChild.getBoundingClientRect();
-
-    htmlOffset.current = {
-      x: rect.left,
-      y: rect.top,
-    };
-
-    console.log("HTML center offset:", htmlOffset.current);
-  });
-}, []);
 
 
 
-const handleButtonClick = (e) => {
-  e.stopPropagation();
-  console.log("Add to Cart Clicked:", { title, position: [positionX, positionY, positionZ] });
-
-  if (!isClickable || !parentGroupRef.current) return;
-  setIsClickable(false);
-  setIsAnimating(true);
-
-  // Save initial camera state
-  initialCameraState.current = {
-    position: camera.position.clone(),
-    quaternion: camera.quaternion.clone(),
-  };
-
-  // Update parent group world matrix
-  parentGroupRef.current.updateWorldMatrix(true, false);
-  const parentMatrix = parentGroupRef.current.matrixWorld;
-  const parentWorldPos = new THREE.Vector3().setFromMatrixPosition(parentMatrix);
-
-  // Get OverlayItem world position
-  const localPos = new THREE.Vector3(positionX, positionY, positionZ);
-  const overlayWorldPos = localPos.clone().applyMatrix4(parentMatrix);
-
-  // === NEW: ROBUST & RELIABLE CAMERA POSITIONING ===
-  const WORLD_UP = new THREE.Vector3(0, 1, 0); // Always up in world space
-
-  // Direction from current camera to group (projected to XZ plane)
-  const cameraToGroup = new THREE.Vector3()
-    .subVectors(camera.position, parentWorldPos);
-  const horizontalDir = new THREE.Vector3(cameraToGroup.x, 0, cameraToGroup.z).normalize();
-
-  // If camera is directly above/below, use a fallback direction
-  if (horizontalDir.lengthSq() < 0.01) {
-    horizontalDir.set(1, 0, 0); // fallback: right
-  }
-
-  // Final camera position: above + offset in viewing direction
-const HEIGHT_ABOVE = props.cameraHeight || 3;
-const DISTANCE_OUT = props.cameraDistance || 5;
-
-
-  const cameraTargetPos = parentWorldPos.clone()
-    .add(WORLD_UP.clone().multiplyScalar(HEIGHT_ABOVE))
-    .add(horizontalDir.clone().multiplyScalar(DISTANCE_OUT));
-
-  // === Animate camera smoothly ===
-  const startPos = camera.position.clone();
-  animate(0, 1, {
-    duration: 1,
-    onUpdate: (t) => {
-      // Move camera
-      camera.position.lerpVectors(startPos, cameraTargetPos, t);
-      // Always look at the OverlayItem
-      camera.lookAt(overlayWorldPos);
-      camera.updateProjectionMatrix();
-    },
-    onComplete: () => {
-      console.log("Camera animation complete");
-    }
-  });
-
-
-
-
-  // Store for external use (e.g. orbit controls)
-  setCameraTarget({
-    position: cameraTargetPos.toArray(),
-    lookAt: overlayWorldPos.toArray(),
-  });
-
-  // Show content after animation
-  setTimeout(() => {
-    setShowContent(true);
-    setIsAnimating(false);
-  }, 1000);
-};
-
-const handleResetClick = (e) => {
-    e.stopPropagation();
-    console.log("Reset clicked → returning to original scene camera");
-
-    setIsAnimating(true);
-    setShowContent(false);
-    setCameraTarget(null);
-
-    // If for some reason we don't have the original state yet, skip or use fallback
-    if (!originalCameraState.current.position) {
-      console.warn("Original camera state not ready yet");
-      setIsAnimating(false);
-      return;
-    }
-
-    const targetPos = originalCameraState.current.position.clone();
-    const targetQuat = originalCameraState.current.quaternion.clone();
-
-    const startPos = camera.position.clone();
-    const startQuat = camera.quaternion.clone();
-
-    // Animate both position + rotation in one smooth animation
-    animate(0, 1, {
-      duration: 1.2,
-      onUpdate: (t) => {
-        camera.position.lerpVectors(startPos, targetPos, t);
-        camera.quaternion.slerpQuaternions(startQuat, targetQuat, t);
-        camera.updateProjectionMatrix();
-      },
-      onComplete: () => {
-        setIsClickable(true);
-        setIsAnimating(false);
-        console.log("Back to original camera:", camera.position.toArray());
-      }
-    });
-
-    // Reset the overlay item rotation back to its original props
-    if (groupRef.current) {
-      const initialQuat = new THREE.Quaternion().setFromEuler(
-        new THREE.Euler(rotationX, rotationY, rotationZ)
-      );
-      const currentQuat = groupRef.current.quaternion.clone();
-
-      animate(0, 1, {
-        duration: 1,
-        onUpdate: (t) => {
-          groupRef.current.quaternion.slerpQuaternions(currentQuat, initialQuat, t);
-        }
-      });
-    }
-  };
-
-
-
-// const handleDragStart = (e) => {
+// const handleButtonClick = (e) => {
 //   e.stopPropagation();
-//   isDragging.current = true;
+//   console.log("Add to Cart Clicked:", { title, position: [positionX, positionY, positionZ] });
 
-//   const x = e.clientX;
-//   const y = e.clientY;
+//   if (!isClickable || !parentGroupRef.current) return;
+//   setIsClickable(false);
+//   setIsAnimating(true);
 
-//   dragOffset.current = {
-//     x: x - windowPos.x,
-//     y: y - windowPos.y,
+//   // Save initial camera state
+//   initialCameraState.current = {
+//     position: camera.position.clone(),
+//     quaternion: camera.quaternion.clone(),
 //   };
 
-//   document.addEventListener("pointermove", handleDragMove);
-//   document.addEventListener("pointerup", handleDragEnd);
-// };
+//   // Update parent group world matrix
+//   parentGroupRef.current.updateWorldMatrix(true, false);
+//   const parentMatrix = parentGroupRef.current.matrixWorld;
+//   const parentWorldPos = new THREE.Vector3().setFromMatrixPosition(parentMatrix);
 
-// const handleDragMove = (e) => {
-//   if (!isDragging.current) return;
+//   // Get OverlayItem world position
+//   const localPos = new THREE.Vector3(positionX, positionY, positionZ);
+//   const overlayWorldPos = localPos.clone().applyMatrix4(parentMatrix);
 
-//   const x = e.clientX;
-//   const y = e.clientY;
+//   // === NEW: ROBUST & RELIABLE CAMERA POSITIONING ===
+//   const WORLD_UP = new THREE.Vector3(0, 1, 0); // Always up in world space
 
-//   setWindowPos({
-//     x: x - dragOffset.current.x,
-//     y: y - dragOffset.current.y,
+//   // Direction from current camera to group (projected to XZ plane)
+//   const cameraToGroup = new THREE.Vector3()
+//     .subVectors(camera.position, parentWorldPos);
+//   const horizontalDir = new THREE.Vector3(cameraToGroup.x, 0, cameraToGroup.z).normalize();
+
+//   // If camera is directly above/below, use a fallback direction
+//   if (horizontalDir.lengthSq() < 0.01) {
+//     horizontalDir.set(1, 0, 0); // fallback: right
+//   }
+
+//   // Final camera position: above + offset in viewing direction
+// const HEIGHT_ABOVE = props.cameraHeight || 3;
+// const DISTANCE_OUT = props.cameraDistance || 5;
+
+
+//   const cameraTargetPos = parentWorldPos.clone()
+//     .add(WORLD_UP.clone().multiplyScalar(HEIGHT_ABOVE))
+//     .add(horizontalDir.clone().multiplyScalar(DISTANCE_OUT));
+
+//   // === Animate camera smoothly ===
+//   const startPos = camera.position.clone();
+//   animate(0, 1, {
+//     duration: 1,
+//     onUpdate: (t) => {
+//       // Move camera
+//       camera.position.lerpVectors(startPos, cameraTargetPos, t);
+//       // Always look at the OverlayItem
+//       camera.lookAt(overlayWorldPos);
+//       camera.updateProjectionMatrix();
+//     },
+//     onComplete: () => {
+//       console.log("Camera animation complete");
+//     }
 //   });
-// };
 
-// const handleDragEnd = () => {
-//   isDragging.current = false;
-//   document.removeEventListener("pointermove", handleDragMove);
-//   document.removeEventListener("pointerup", handleDragEnd);
+
+
+
+//   // Store for external use (e.g. orbit controls)
+//   setCameraTarget({
+//     position: cameraTargetPos.toArray(),
+//     lookAt: overlayWorldPos.toArray(),
+//   });
+
+//   // Show content after animation
+//   setTimeout(() => {
+//     setShowContent(true);
+//     setIsAnimating(false);
+//   }, 1000);
 // };
+const handleButtonClick = (e) => {
+  e.stopPropagation();
+
+  // Just open the overlay instantly — NO CAMERA STUFF
+  setShowContent(true);
+};
+const handleResetClick = (e) => {
+  e.stopPropagation();
+  setShowContent(false);
+};
+
+
 const handleDragStart = (e) => {
   e.stopPropagation();
   isDragging.current = true;
@@ -334,9 +254,8 @@ const snapBackIntoBounds = () => {
     let x = prev.x;
     let y = prev.y;
 
-    // compensate for R3F center offset
-    const visualX = x + htmlOffset.current.x;
-    const visualY = y + htmlOffset.current.y;
+    const visualX = x;  // not x + htmlOffset.current.x
+    const visualY = y;
 
     // LEFT boundary
     if (visualX < padding) {
@@ -399,23 +318,32 @@ const snapBackIntoBounds = () => {
   distanceFactor={distanceFactor}     // was 20 → makes everything bigger
   occlude={false}       // disables distance-based auto-scaling → same size everywhere
 > */}
- 
         <Html
-        portal={{ current: document.getElementById("overlay-portal") }}  
-          style={{
+portal={{ current: portalRoot.current }}  
+            style={{
             position: "fixed",
             top: 0,
             left: 0,
             width: "100vw",
             height: "100vh",
-            zIndex: 10,                      
-            pointerEvents: props.section === 0 ? "auto" : "none",
-            opacity: props.section === 0 ? 1 : 0,
+          pointerEvents: "none",   // ← Html never blocks anything
+          zIndex: 10,                           // low = under menu
           }}
           center
           distanceFactor={distanceFactor}
           occlude={false}
         > 
+        <div
+        style={{
+          pointerEvents: isVisible ? "auto" : "none",
+          opacity: isVisible ? 1 : 0,
+          transition: "opacity 0.6s ease",
+          transitionDelay: isVisible ? "0s" : "0.2s",
+          width: "100%",
+          height: "100%",
+        }}
+      >
+
           <div className="text-sm w-full relative" style={{ pointerEvents: "none" }}>
               {showContent ? (
                 <div
@@ -535,6 +463,8 @@ const snapBackIntoBounds = () => {
   </div>
     )}
   </div>
+</div>
+
 </Html>
     </group>
   );
@@ -688,12 +618,12 @@ export function Office({ section, menuOpened, isDay, setIsAnimating, setCameraTa
         rotation={[-Math.PI / 2, 0, Math.PI / 2]}
         scale={100}
         ref={balconyRailGroupRef}
-        visible={props.section === 0}
-
       >
         <mesh geometry={nodes.Balcony_rail_glass001_House_material_0.geometry} material={materials.House_material} />
-        <OverlayItem
-          section={section}            
+        
+      </group>
+      <OverlayItem
+        section={section}
         id="balcony"                     // ← give each one a unique string
           key="balcony-rail"
           rotationX={Math.PI / 2}
@@ -707,14 +637,9 @@ export function Office({ section, menuOpened, isDay, setIsAnimating, setCameraTa
           price="250-500"
           bgColor="bg-yellow-500"
           parentGroupRef={balconyRailGroupRef}
-          setIsAnimating={setIsAnimating}
-          setCameraTarget={setCameraTarget}
-          cameraHeight={4}
-          cameraDistance={1}
-          activeOverlayId={activeOverlayId}
-          setActiveOverlayId={setActiveOverlayId}
+  activeOverlayId={activeOverlayId}
+  setActiveOverlayId={setActiveOverlayId}
         />
-      </group>
         <group position={[400, 200, 0]} rotation={[-Math.PI / 2, 0, 0]} scale={100}>
           <mesh geometry={nodes.Door_Front_House_material_0.geometry} material={materials.House_material} />
           <mesh geometry={nodes.Door_Front_House_material_0001.geometry} material={materials.House_material} />
@@ -779,37 +704,16 @@ export function Office({ section, menuOpened, isDay, setIsAnimating, setCameraTa
         <mesh geometry={nodes.Balcony_wall_1_House_material_0.geometry} material={materials.House_material} position={[0, 545.015, -200]} rotation={[-Math.PI / 2, 0, 0]} scale={100} />
         <mesh geometry={nodes.Balcony_wall_2_House_material_0.geometry} material={materials.House_material} position={[400, 200, 0]} rotation={[-Math.PI / 2, 0, 0]} scale={100} />
 
-        {/* deck */}
+        {/* deck not doing the deck persay we are doing the bacony rail as deck */}
 
         <group
         position={[0, 200, 0]}
         rotation={[-Math.PI / 2, 0, Math.PI / 2]}
         scale={100}
         ref={deckFloorGroupRef}
-        visible={props.section === 0}
-
       >
         <mesh geometry={nodes.Balcony_wood_floor_House_material_0.geometry} material={materials.House_material} />
-          <OverlayItem
-          section={section}            
-          id="deck"                     // ← give each one a unique string
-          key="deck-floor"
-          rotationX={Math.PI / 2}
-          rotationY={-Math.PI / 2}
-          rotationZ={0}
-          positionX={1.2}
-          positionY={-0.1}
-          positionZ={-5.2}
-          title="Deck Floor Cleaning"
-          description="Power wash + seal"
-          price="400-800"
-          bgColor="bg-green-500"
-          parentGroupRef={deckFloorGroupRef}
-          setIsAnimating={setIsAnimating}
-          setCameraTarget={setCameraTarget}
-          activeOverlayId={activeOverlayId}
-          setActiveOverlayId={setActiveOverlayId}
-        />
+       
       </group>
 
         {/* <mesh geometry={nodes.Balcony_wood_floor_House_material_0.geometry} material={materials.House_material} position={[0, 200, 0]} rotation={[-Math.PI / 2, 0, 0]} scale={100} /> old deck */}
@@ -820,54 +724,35 @@ export function Office({ section, menuOpened, isDay, setIsAnimating, setCameraTa
         rotation={[-Math.PI / 2, 0, 0]}
         scale={100}
         ref={drivewayGroupRef}
-        visible={props.section === 0}
-
       >
         <mesh geometry={nodes.Driveway_House_material_0.geometry} material={materials.House_material} />
-        <OverlayItem
-        section={section}            
+        
+      </group>
+      <OverlayItem
+        section={section}
         id="driveway"                     // ← give each one a unique string
           key="driveway"
           rotationX={Math.PI / 2}
           rotationY={-Math.PI / 2}
           rotationZ={0}
           positionX={0.2}
-          positionY={-5.1}
-          positionZ={-3.4}
+          positionY={-900.1}
+          positionZ={500.4}
           title="Driveway Cleaning"
           description="Oil stains + power wash"
           price="300-600"
           bgColor="bg-blue-500"
           parentGroupRef={drivewayGroupRef}
-          setIsAnimating={setIsAnimating}
-          setCameraTarget={setCameraTarget} 
-          cameraHeight={2}
-          cameraDistance={5}
-          distanceFactor={16}
+          
+          distanceFactor={26}
           activeOverlayId={activeOverlayId}
-  setActiveOverlayId={setActiveOverlayId}
+        setActiveOverlayId={setActiveOverlayId}
         />
-      </group>
-        {/* <group position={[-4.128, 0, 305.314]} rotation={[-Math.PI / 2, 0, 0]} scale={100} ref={balconyGroupRef}>
+        <group position={[-4.128, 0, 305.314]} rotation={[-Math.PI / 2, 0, 0]} scale={100} ref={balconyRailGroupRef}>
           <mesh geometry={nodes.Driveway_House_material_0.geometry} material={materials.House_material} />
-          <OverlayItem
-            rotationX={Math.PI / 2}
-            rotationY={-Math.PI / 2}
-            rotationZ={0}
-            positionX={0.2}
-            positionY={-5.1}
-            positionZ={2.4}
-            title={"Deck cleaning"}
-            description={"Scrib scrub"}
-            price={"250-500"}
-            bgColor={"bg-yellow-500"}
-            className={"transition delay-1000"}
-            parentGroupRef={balconyGroupRef}
-            setIsAnimating={setIsAnimating}
-            setCameraTarget={setCameraTarget} 
-          />
-        </group> */}
-        {/* <mesh geometry={nodes.Driveway_House_material_0.geometry} material={materials.House_material} position={[-4.128, 0, 305.314]} rotation={[-Math.PI / 2, 0, 0]} scale={100} /> */}
+          
+        </group>
+        
 
 
         <mesh geometry={nodes.Driveway001_House_material_0.geometry} material={materials.House_material} position={[-162.113, -13.119, 752.987]} rotation={[-Math.PI / 2, 0, 0]} scale={100} />
@@ -952,433 +837,3 @@ useGLTF.preload("models/scene.glb");
 
 
 
-//down here is og working with still option to adjust camera 
-
-// import { useGLTF, useTexture, useVideoTexture, useAnimations, MeshTransmissionMaterial, Html  } from "@react-three/drei";
-// import { useFrame } from "@react-three/fiber";
-// import { animate, useMotionValue } from "framer-motion";
-// import { useEffect, useRef } from "react";
-// import * as THREE from "three";
-
-// //white floor baby
-
-// function SquareComponent({ position, rotation, scale }) {
-//   return (
-//     <mesh
-//       geometry={new THREE.PlaneGeometry(1050, 900)} // Large width and length
-//       position={position}
-//       rotation={rotation}
-//       scale={scale}
-//     >
-//       <meshStandardMaterial color="white" side={THREE.DoubleSide} />
-//     </mesh>
-//   );
-// }
-// //glass baby
-
-// function GlassComponent({ geometry, position, rotation, scale }) {
-//   //  <GlassComponent
-//   //       geometry={nodes.Door_Front_House_material_0.geometry}
-//   //       position={[400, 200, 0]}
-//   //       rotation={[-Math.PI / 2, 0, 0]}
-//   //       scale={100}
-//   //     /> for the office component if you need to redo npx gltfjsx
-//   return (
-//     <mesh geometry={geometry} position={position} rotation={rotation} scale={scale}>
-//       {/* The black frame overlay */}
-
-
-//       {/* <MeshTransmissionMaterial
-//         color="#e0f7ff"
-//         transmission={1}
-//         roughness={0.1}
-//         thickness={0.4}
-//         chromaticAberration={0.02}
-//       /> */}
-//             {/* The black frame overlay */}
-
-//        {/* <MeshTransmissionMaterial
-//           color="#444444"               
-//           transmission={0.9}            
-//           roughness={0.15} 
-//           thickness={0.5}     
-//           ior={1}           
-//           anisotropy={0.05}
-//           chromaticAberration={0.005}
-//         /> */}
-//              <MeshTransmissionMaterial
-//           color="#444444"               // dark gray-blue tone (lighter than #222)
-//           transmission={0.8}            // more light passes through (less opaque)
-//           roughness={0.45}              // moderate softness
-//           thickness={0.5}               // still has density
-//           ior={1.3}                     // slightly softer reflections
-//           anisotropy={0.05}
-//           chromaticAberration={0.005}
-//         />
-//     </mesh>
-//   );
-// }
-
-
-
-
-
-
-
-// /////
-// ///3D sign
-// /////
-
-
-
-
-
-
-// const OverlayItem = ({
-//   className = "",
-//   title,
-//   description,
-//   price,
-//   bgColor,
-//   ...props
-// }) => {
-//   // const [currentPage] = useAtom(currentPageAtom);
-//   return (
-//     <Html
-//       transform
-//       distanceFactor={5}
-//       center
-//       className={`w-64 h-48 rounded-md overflow-hidden 
-//       transition-opacity duration-1000 ${className}`}
-//       {...props}
-//     >
-//       <div className="bg-white bg-opacity-90 backdrop-blur-2xl text-sm p-2 w-full">
-//         <h2 className="font-bold">{title}</h2>
-//         <p>{description}</p>
-//       </div>
-//       <button
-//         className={`${bgColor} hover:bg-opacity-50 transition-colors duration-500 px-4 py-2 font-bold text-white w-full text-xs`}
-//       >
-//         Add to cart ${price}
-//       </button>
-//     </Html>
-//   );
-// };
-
-
-
-
-
-// export function Office(props) {
-//   const { section } = props;
-//   const group = useRef();
-//   const { nodes, materials, animations } = useGLTF("models/scene.glb");
-//   const texture = useTexture("textures/scene.jpg");
-//   const textureVSCode = useVideoTexture("textures/vscode.mp4");
-//   const { actions, mixer } = useAnimations(animations, group);
-
-//   texture.flipY = false;
-//   texture.encoding = THREE.sRGBEncoding;
-
-//   const textureMaterial = new THREE.MeshStandardMaterial({
-//     map: texture,
-//     transparent: true,
-//     opacity: 1,
-//   });
-
-//   const textureGlassMaterial = new THREE.MeshStandardMaterial({
-//     map: texture,
-//     transparent: true,
-//     opacity: 0.32,
-//   });
-  
-
-
-//   const textureOpacity = useMotionValue(0);
-//   const glassTextureOpacity = useMotionValue(0);
-
-//   useEffect(() => {
-
-//     animate(textureOpacity, section === 0 ? 1 : 0);
-//     animate(glassTextureOpacity, section === 0 ? 0.32 : 0);
-//     console.log(actions);
- 
-//    }, [section]);
-
-
-
-//   useFrame(() => {
-//     textureMaterial.opacity = textureOpacity.get();
-//     textureGlassMaterial.opacity = glassTextureOpacity.get();
-//   });
-// const ZoomCamera = ({ isFirstSlide }) => {
-//   const { camera } = useThree();
-
-//   useFrame(() => {
-//     camera.position.z = isFirstSlide ? 34 : 10;
-//     camera.updateProjectionMatrix();
-//   });
-
-//   return null;
-// };
-//   return (
-//     <group ref={group} {...props} dispose={null} position={[-11, -4, -2]}  rotation={[0, 0, 0]} scale={1.1}>
-//       <group scale={0.01}>
-//         <SquareComponent
-//           position={[420, 14, -260]} // Place at ground level, centered in the scene
-//           rotation={[-Math.PI / 2, 0, 0]} // Face upwards
-//           scale={1} // Match the scale of other components
-//         />
-//             <GlassComponent
-//         geometry={nodes.Door_Front_House_material_0001.geometry}
-//         position={[400, 200, 0]}
-//         rotation={[-Math.PI / 2, 0, 0]}
-//         scale={100}
-//        />
-//                  {/* <GlassComponent
-//         geometry={nodes.Window_front_2nd_floor002_House_material_0.geometry}
-//         position={[400, 200, 0]}
-//         rotation={[-Math.PI / 2, 0, 0]}
-//         scale={100}
-//        /> */}
-//                  <GlassComponent
-//         geometry={nodes.Window_front_2nd_floor001_House_material_0001.geometry}
-//         position={[400, 200, 0]}
-//         rotation={[-Math.PI / 2, 0, 0]}
-//         scale={100}
-//        />
-
-
-//         <GlassComponent
-//         geometry={nodes.Window_front_2nd_floor_House_material_0001.geometry}
-//         position={[400, 200, 0]}
-//         rotation={[-Math.PI / 2, 0, 0]}
-//         scale={100}
-//        />
-//          <GlassComponent
-//         geometry={nodes.Window_front_1st_floor_House_material_0001.geometry}
-//         position={[400, 200, 10]}
-//         rotation={[-Math.PI / 2, 0, 0]}
-//         scale={100}
-
-//        />
-// {/* <GlassComponent
-//         geometry={nodes.Balcony_Glass_door_Upper004_House_material_0001.geometry}
-//         position={[950, 200, -390]}
-//         rotation={[-Math.PI / 2, 0, -Math.PI / 2]}
-//        scale={100}
-
-//        /> */}
-//        {/* <GlassComponent
-//         geometry={nodes.Balcony_Glass_door_Upper005_House_material_0001.geometry}
-//         position={[950, 200, -20]}
-//         rotation={[-Math.PI / 2, 0, -Math.PI / 2]}
-//        scale={100}
-
-        
-//        /> */}
-//        {/* <GlassComponent
-//         geometry={nodes.Balcony_rail_glass002_House_material_0.geometry}
-//         position={[400, 200, 0]}
-//         rotation={[-Math.PI / 2, 0, 0]}
-//         scale={100}
-//        /> */}
-//        {/* <GlassComponent
-//         geometry={nodes.Balcony_rail_glass003_House_material_0.geometry}
-//         position={[400, 200, 0]}
-//         rotation={[-Math.PI / 2, 0, 0]}
-//         scale={100}
-//        /> */}
-//      <GlassComponent
-//         geometry={nodes.Door_side_House_material_0001.geometry}
-//         position={[400, 200, 0]}
-//         rotation={[-Math.PI / 2, 0, 0]}
-//         scale={100}
-//        />
-//        <GlassComponent
-//         geometry={nodes.Garage_door_House_material_0001.geometry}
-//         position={[0, 200, 0]}
-//         rotation={[-Math.PI / 2, 0, 0]}
-//         scale={100}
-//        />
-      
-//        <group position={[950.267, 199.77, -398.613]} rotation={[-Math.PI / 2, 0, -Math.PI / 2]} scale={100}>
-//           <mesh geometry={nodes.Balcony_Glass_door_Upper004_House_material_0.geometry} material={materials.House_material} />
-//           {/* <mesh geometry={nodes.Balcony_Glass_door_Upper004_House_material_0001.geometry} material={materials.House_material} position={[0.012, -0.051, 0]} /> */}
-//         </group>
-//         <group position={[950.267, 199.77, -28.613]} rotation={[-Math.PI / 2, 0, -Math.PI / 2]} scale={100}>
-//           <mesh geometry={nodes.Balcony_Glass_door_Upper005_House_material_0.geometry} material={materials.House_material} />
-//           {/* <mesh geometry={nodes.Balcony_Glass_door_Upper005_House_material_0001.geometry} material={materials.House_material} position={[0.012, -0.051, 0]} /> */}
-//         </group>
-//         <group position={[0.488, 406.956, 204.005]} rotation={[-Math.PI / 2, 0, 0]} scale={100}>
-//           <mesh geometry={nodes.Balcony_rail_glass_House_material_0.geometry} material={materials.House_material} />
-//           {/* <mesh geometry={nodes.Balcony_rail_glass002_House_material_0.geometry} material={materials.House_material} /> */}
-//         </group>
-//         <group position={[-228.117, 406.956, 1.194]} rotation={[-Math.PI / 2, 0, Math.PI / 2]} scale={100}>
-//           <mesh geometry={nodes.Balcony_rail_glass001_House_material_0.geometry} material={materials.House_material} />
-//           {/* <mesh geometry={nodes.Balcony_rail_glass003_House_material_0.geometry} material={materials.House_material} rotation={[0, 0, -Math.PI]} /> */}
-//             <OverlayItem
-//               rotation-x={Math.PI / 2}   // <-- fix sideways tilt
-//               rotation-y={-90}             // adjust if needed
-//               rotation-z={0}              
-//               position-x={1.2}
-//               position-z={1.2}
-//               position-y={-0.1}
-//               title={"Deck cleaning"}
-//               description={"Scrib scrub"}
-//               price={"250-500"}
-//               bgColor={"bg-yellow-500"}
-//               className={"transition delay-1000"}
-//             />
-//         </group>
-//         <group position={[400, 200, 0]} rotation={[-Math.PI / 2, 0, 0]} scale={100}>
-//           <mesh geometry={nodes.Door_Front_House_material_0.geometry} material={materials.House_material} />
-//           <mesh geometry={nodes.Door_Front_House_material_0001.geometry} material={materials.House_material} />
-//         </group>
-//         <group position={[400, 200, 0]} rotation={[-Math.PI / 2, 0, 0]} scale={100}>
-//           <mesh geometry={nodes.Door_side_House_material_0.geometry} material={materials.House_material} />
-//           {/* <mesh geometry={nodes.Door_side_House_material_0001.geometry} material={materials.House_material} /> */}
-//         </group>
-//         <group position={[0, 200, 0]} rotation={[-Math.PI / 2, 0, 0]} scale={100}>
-//           <mesh geometry={nodes.Garage_door_House_material_0.geometry} material={materials.House_material} />
-//           {/* <mesh geometry={nodes.Garage_door_House_material_0001.geometry} material={materials.House_material} /> */}
-//         </group>
-//         <group position={[400, 200, 8.401]} rotation={[-Math.PI / 2, 0, 0]} scale={100}>
-//           <mesh geometry={nodes.Window_front_1st_floor_House_material_0.geometry} material={materials.House_material} />
-//           {/* <mesh geometry={nodes.Window_front_1st_floor_House_material_0001.geometry} material={materials.House_material} /> */}
-//         </group>
-//         <group position={[400, 200, 0]} rotation={[-Math.PI / 2, 0, 0]} scale={100}>
-//           <mesh geometry={nodes.Window_front_2nd_floor_House_material_0.geometry} material={materials.House_material} />
-//           {/* <mesh geometry={nodes.Window_front_2nd_floor_House_material_0001.geometry} material={materials.House_material} /> */}
-//         </group>
-//         <group position={[400, 200, 0]} rotation={[-Math.PI / 2, 0, 0]} scale={100}>
-//           <mesh geometry={nodes.Window_front_2nd_floor001_House_material_0.geometry} material={materials.House_material} />
-//           {/* <mesh geometry={nodes.Window_front_2nd_floor001_House_material_0001.geometry} material={materials.House_material} /> */}
-//         </group>
-        
-        
-//         <mesh geometry={nodes._Roof_Main_House_material_0.geometry} material={materials.newRoof} position={[450, 709.989, -200]} rotation={[-Math.PI / 2, 0, 0]} scale={100} />
-//         <mesh geometry={nodes.Back_wall_2nd_floor_House_material_0.geometry} material={materials.House_material} position={[400, 200, 0]} rotation={[-Math.PI / 2, 0, 0]} scale={100} />
-
-//         <GlassComponent
-//         geometry={nodes.Balcony_Glass_door_House_material_0.geometry}
-//         position={[400, 200, 0]}
-//         rotation={[-Math.PI / 2, 0, 0]}
-//         scale={100}
-//        />
-//        <GlassComponent
-//         geometry={nodes.Balcony_Glass_door_2_House_material_0.geometry}
-//         position={[402.152, 200, 0]}
-//         rotation={[-Math.PI / 2, 0, 0]}
-//         scale={100}
-//        />
-//         <GlassComponent
-//         geometry={nodes.Balcony_Glass_door_2_Upper_House_material_0.geometry}
-//         position={[400, 200, 0]}
-//         rotation={[-Math.PI / 2, 0, 0]}
-//         scale={100}
-//        />
-//        <GlassComponent
-//         geometry={nodes.Balcony_Glass_door_2001_House_material_0.geometry}
-//         position={[400, 200, 0]}
-//         rotation={[-Math.PI / 2, 0, 0]}
-//         scale={100}
-//        />
-//        <GlassComponent
-//         geometry={nodes.Balcony_Glass_door_Upper_House_material_0.geometry}
-//         position={[400, 200, 0]}
-//         rotation={[-Math.PI / 2, 0, 0]}
-//         scale={100}
-//        />
-//         {/* <mesh geometry={nodes.Balcony_Glass_door_House_material_0.geometry} material={materials.House_material} position={[400, 200, 0]} rotation={[-Math.PI / 2, 0, 0]} scale={100} />// */}
-//         {/* <mesh geometry={nodes.Balcony_Glass_door_2_House_material_0.geometry} material={materials.House_material} position={[402.152, 200, 0]} rotation={[-Math.PI / 2, 0, 0]} scale={100} /> // */}
-//         {/* <mesh geometry={nodes.Balcony_Glass_door_2_Upper_House_material_0.geometry} material={materials.House_material} position={[400, 200, 0]} rotation={[-Math.PI / 2, 0, 0]} scale={100} />// */}
-//         {/* <mesh geometry={nodes.Balcony_Glass_door_2001_House_material_0.geometry} material={materials.House_material} position={[400, 200, 0]} rotation={[-Math.PI / 2, 0, 0]} scale={100} />// */}
-//         {/* <mesh geometry={nodes.Balcony_Glass_door_Upper_House_material_0.geometry} material={materials.House_material} position={[400, 200, 0]} rotation={[-Math.PI / 2, 0, 0]} scale={100} />// */}
-
-
-
-//         <mesh geometry={nodes.Balcony_Glass_door_Upper001_House_material_0.geometry} material={materials.House_material} position={[454.801, 182.653, -597.463]} rotation={[-Math.PI / 2, 0, 0]} scale={100} />
-//         <mesh geometry={nodes.Balcony_Glass_door_Upper002_House_material_0.geometry} material={materials.House_material} position={[-3.284, 499.399, -602.541]} rotation={[-Math.PI / 2, 0, 0]} scale={100} />
-//         <mesh geometry={nodes.Balcony_Glass_door_Upper003_House_material_0.geometry} material={materials.House_material} position={[-1.15, 199.77, -600.006]} rotation={[-Math.PI / 2, 0, 0]} scale={100} />
-//         <mesh geometry={nodes.Balcony_rail_House_material_0.geometry} material={materials.House_material} position={[3.947, 350.037, 204.274]} rotation={[-Math.PI / 2, 0, 0]} scale={100} />
-//         <mesh geometry={nodes.Balcony_rail_1_House_material_0.geometry} material={materials.House_material} position={[149.634, 350.037, 204.274]} rotation={[-Math.PI / 2, 0, 0]} scale={100} />
-//         <mesh geometry={nodes.Balcony_rail_2_House_material_0.geometry} material={materials.House_material} position={[-149.213, 350.037, 204.274]} rotation={[-Math.PI / 2, 0, 0]} scale={100} />
-//         <mesh geometry={nodes.Balcony_rail_3_House_material_0.geometry} material={materials.House_material} position={[-227.303, 350.037, 1.188]} rotation={[-Math.PI / 2, 0, 0]} scale={100} />
-//         <mesh geometry={nodes.Balcony_rail_4_House_material_0.geometry} material={materials.House_material} position={[-227.303, 350.037, 170.973]} rotation={[-Math.PI / 2, 0, 0]} scale={100} />
-//         <mesh geometry={nodes.Balcony_rail_5_House_material_0.geometry} material={materials.House_material} position={[-227.303, 350.037, -172.734]} rotation={[-Math.PI / 2, 0, 0]} scale={100} />
-//         <mesh geometry={nodes.Balcony_trim_House_material_0.geometry} material={materials.House_material} position={[0, 200, 0]} rotation={[-Math.PI / 2, 0, 0]} scale={100} />
-//         <mesh geometry={nodes.Balcony_wall_1_House_material_0.geometry} material={materials.House_material} position={[0, 545.015, -200]} rotation={[-Math.PI / 2, 0, 0]} scale={100} />
-//         <mesh geometry={nodes.Balcony_wall_2_House_material_0.geometry} material={materials.House_material} position={[400, 200, 0]} rotation={[-Math.PI / 2, 0, 0]} scale={100} />
-//         <mesh geometry={nodes.Balcony_wood_floor_House_material_0.geometry} material={materials.House_material} position={[0, 200, 0]} rotation={[-Math.PI / 2, 0, 0]} scale={100} />
-//         <mesh geometry={nodes.Driveway_House_material_0.geometry} material={materials.House_material} position={[-4.128, 0, 305.314]} rotation={[-Math.PI / 2, 0, 0]} scale={100} />
-//         <mesh geometry={nodes.Driveway001_House_material_0.geometry} material={materials.House_material} position={[-162.113, -13.119, 752.987]} rotation={[-Math.PI / 2, 0, 0]} scale={100} />
-//         <mesh geometry={nodes.Driveway002_House_material_0.geometry} material={materials.House_material} position={[206.757, -13.119, 752.987]} rotation={[-Math.PI / 2, 0, 0]} scale={100} />
-//         <mesh geometry={nodes.Fence_House_material_0.geometry} material={materials.House_material} position={[-814.541, 174.924, 1.036]} rotation={[-Math.PI / 2, 0, 0]} scale={100} />
-//         <mesh geometry={nodes.Fence_poles_House_material_0.geometry} material={materials.House_material} position={[-814.53, 210.163, 1091.849]} rotation={[-Math.PI / 2, 0, 0]} scale={100} />
-//         <mesh geometry={nodes.Fence_poles001_House_material_0.geometry} material={materials.House_material} position={[1257.63, 137.628, 86.034]} rotation={[-Math.PI / 2, 0, 0]} scale={100} />
-//         <mesh geometry={nodes.Fence_poles002_House_material_0.geometry} material={materials.House_material} position={[224.22, 137.628, -919.778]} rotation={[-Math.PI / 2, 0, Math.PI / 2]} scale={100} />
-//         <mesh geometry={nodes.Fence001_House_material_0.geometry} material={materials.House_material} position={[1257.619, 95.703, 86.354]} rotation={[-Math.PI / 2, 0, 0]} scale={100} />
-//         <mesh geometry={nodes.Fence002_House_material_0.geometry} material={materials.House_material} position={[224.209, 95.703, -919.458]} rotation={[-Math.PI / 2, 0, Math.PI / 2]} scale={100} />
-//         <mesh geometry={nodes.Front_fence_House_material_0.geometry} material={materials.House_material} rotation={[-Math.PI / 2, 0, 0]} scale={100} />
-//         <mesh geometry={nodes.Front_fence_2_House_material_0.geometry} material={materials.House_material} position={[535.435, 27.254, 1130.915]} rotation={[-Math.PI / 2, 0, 0]} scale={100} />
-//         <mesh geometry={nodes.Front_lawn_design_House_material_0.geometry} material={materials.House_material} position={[575.645, 3.672, 789.029]} rotation={[-Math.PI / 2, 0, 0]} scale={100} />
-//         <mesh geometry={nodes.Garden_Ground_Material_0.geometry} material={materials.Ground_Material} position={[-227.216, -3.571, -56.219]} rotation={[-Math.PI / 2, 0, 0]} scale={100} />
-//         <mesh geometry={nodes.Garden001_Ground_Material_0.geometry} material={materials.Ground_Material} position={[527.892, -3.677, 429.819]} rotation={[-Math.PI / 2, 0, 0]} scale={100} />
-//         <mesh geometry={nodes.Grage_wall__House_material_0.geometry} material={materials.House_material} position={[0, 200, 0]} rotation={[-Math.PI / 2, 0, 0]} scale={100} />
-//         <mesh geometry={nodes.Grass_Grass_Material_0.geometry} material={materials.Grass_Material} rotation={[-Math.PI / 2, 0, 0]} scale={100} />
-//         <mesh geometry={nodes.Gutter_House_material_0.geometry} material={materials.House_material} position={[400, 200, 0]} rotation={[-Math.PI / 2, 0, 0]} scale={100} />
-//         <mesh geometry={nodes.Gutter_drain_big_House_material_0.geometry} material={materials.House_material} position={[400, 200, 0]} rotation={[-Math.PI / 2, 0, 0]} scale={100} />
-//         <mesh geometry={nodes.Gutter_drain_small_House_material_0.geometry} material={materials.House_material} position={[400, 200, 0]} rotation={[-Math.PI / 2, 0, 0]} scale={100} />
-//         <mesh geometry={nodes.House_main_bottom_House_material_0.geometry} material={materials.House_material} position={[400, 200, 8.401]} rotation={[-Math.PI / 2, 0, 0]} scale={100} />
-//         <mesh geometry={nodes.House_main_top_House_material_0.geometry} material={materials.House_material} position={[400, 200, 0]} rotation={[-Math.PI / 2, 0, 0]} scale={100} />
-//         <mesh geometry={nodes.Path_House_material_0.geometry} material={materials.House_material} position={[-308.445, 0, -458.168]} rotation={[-Math.PI / 2, 0, 0]} scale={100} />
-//         <mesh geometry={nodes.Path001_House_material_0.geometry} material={materials.House_material} position={[-308.445, 0, -458.168]} rotation={[-Math.PI / 2, 0, 0]} scale={100} />
-//         <mesh geometry={nodes.Path002_House_material_0.geometry} material={materials.House_material} position={[-308.445, 0, -458.168]} rotation={[-Math.PI / 2, 0, 0]} scale={100} />
-//         <mesh geometry={nodes.Pine_Bush_texture_0.geometry} material={materials.Bush_texture} position={[-273.902, 88.13, -284.533]} rotation={[-Math.PI / 2, 0, 0]} scale={100} />
-//         <mesh geometry={nodes.Pine_2_Bush_texture_0.geometry} material={materials.Bush_texture} position={[-195.675, 17.79, 1117.777]} rotation={[-Math.PI / 2, 0, 0]} scale={100} />
-//         <mesh geometry={nodes.Pine_3_Bush_texture_0.geometry} material={materials.Bush_texture} position={[241.193, 17.79, 1117.777]} rotation={[-Math.PI / 2, 0, 0]} scale={100} />
-//         <mesh geometry={nodes.Pine001_Bush_texture_0.geometry} material={materials.Bush_texture} position={[-693.076, 185.116, 128.914]} rotation={[-Math.PI / 2, 0, 0]} scale={100} />
-//         <mesh geometry={nodes.Pine002_Bush_texture_0.geometry} material={materials.Bush_texture} position={[938.995, 185.116, -810.432]} rotation={[-Math.PI / 2, 0, 0]} scale={100} />
-//         <mesh geometry={nodes.Pine003_Bush_texture_0.geometry} material={materials.Bush_texture} position={[1119.298, 214.967, 1002.216]} rotation={[-Math.PI / 2, 0, 0]} scale={100} />
-//         <mesh geometry={nodes.Pine004_Bush_texture_0.geometry} material={materials.Bush_texture} position={[-519.526, 214.967, 983.236]} rotation={[-Math.PI / 2, 0, 0]} scale={100} />
-//         <mesh geometry={nodes.Plant_1_Plant3_0.geometry} material={materials.Plant3} position={[-193.577, -6.586, 1045.817]} rotation={[-Math.PI / 2, 0, 0]} scale={100} />
-//         <mesh geometry={nodes.Plant_2_Plant3_0.geometry} material={materials.Plant3} position={[243.292, -6.586, 1045.817]} rotation={[-Math.PI / 2, 0, 0]} scale={100} />
-//         <mesh geometry={nodes.Plant_3_Plant3_0.geometry} material={materials.Plant3} position={[279.711, 30.6, 399.54]} rotation={[-Math.PI / 2, 0, 0]} scale={100} />
-//         <mesh geometry={nodes.Plant_4_Plant3_0.geometry} material={materials.Plant3} position={[-253.745, 35.451, 260.801]} rotation={[-Math.PI / 2, 0, -0.306]} scale={100} />
-//         <mesh geometry={nodes.Plant_4001_Plant3_0.geometry} material={materials.Plant3} position={[-683.364, 103.647, -785.771]} rotation={[-Math.PI / 2, 0, 0]} scale={100} />
-//         <mesh geometry={nodes.Plant_4002_Plant3_0.geometry} material={materials.Plant3} position={[929.224, 64.978, 1043.531]} rotation={[-Math.PI / 2, 0, 0]} scale={100} />
-//         <mesh geometry={nodes.Plant_4003_Plant3_0.geometry} material={materials.Plant3} position={[-721.595, 64.978, 988.766]} rotation={[-Math.PI / 2, 0, 0]} scale={100} />
-//         <mesh geometry={nodes.Plant_4004_Plant3_0.geometry} material={materials.Plant3} position={[-625.912, 64.978, 838.016]} rotation={[-Math.PI / 2, 0, 0]} scale={100} />
-//         <mesh geometry={nodes.Plant_4005_Plant3_0.geometry} material={materials.Plant3} position={[1161.17, 52.84, 801.259]} rotation={[-Math.PI / 2, 0, 0]} scale={100} />
-//         <mesh geometry={nodes.Ref_house_House_material_0.geometry} material={materials.House_material} position={[400, 200, 0]} rotation={[-Math.PI / 2, 0, 0]} scale={100} />
-//         <mesh geometry={nodes.Ref_house001_House_material_0.geometry} material={materials.House_material} position={[400, 200, 0]} rotation={[-Math.PI / 2, 0, 0]} scale={100} />
-//         <mesh geometry={nodes.Ref_house002_House_material_0.geometry} material={materials.House_material} position={[400, 200, 0]} rotation={[-Math.PI / 2, 0, 0]} scale={100} />
-//         <mesh geometry={nodes.Ref_house003_House_material_0.geometry} material={materials.House_material} position={[400, 200, 0]} rotation={[-Math.PI / 2, 0, 0]} scale={100} />
-//         <mesh geometry={nodes.Ref_house004_House_material_0.geometry} material={materials.House_material} position={[400, 200, 0]} rotation={[-Math.PI / 2, 0, 0]} scale={100} />
-//         <mesh geometry={nodes.Ref_house005_House_material_0.geometry} material={materials.House_material} position={[400, 200, 0]} rotation={[-Math.PI / 2, 0, 0]} scale={100} />
-//         <mesh geometry={nodes.Ref_house006_House_material_0.geometry} material={materials.House_material} position={[400, 200, 0]} rotation={[-Math.PI / 2, 0, 0]} scale={100} />
-//         <mesh geometry={nodes.Ref_house007_House_material_0.geometry} material={materials.House_material} position={[400, 200, 0]} rotation={[-Math.PI / 2, 0, 0]} scale={100} />
-//         <mesh geometry={nodes.rocks_Rock_texture_0.geometry} material={materials.Rock_texture} position={[840.75, -4.967, 412.407]} rotation={[-Math.PI / 2, 0, 0]} scale={100} />
-//         <mesh geometry={nodes.rocks001_Rock_texture_0.geometry} material={materials.Rock_texture} position={[-590.829, 12.965, 434.988]} rotation={[-Math.PI / 2, 0, 0]} scale={100} />
-//         <mesh geometry={nodes.rocks002_Rock_texture_0.geometry} material={materials.Rock_texture} position={[-231.549, 1.286, -349.319]} rotation={[-Math.PI / 2, 0, 0]} scale={100} />
-//         <mesh geometry={nodes.rocks003_Rock_texture_0.geometry} material={materials.Rock_texture} position={[-173.386, 12.965, 247.555]} rotation={[-Math.PI / 2, 0, 0]} scale={100} />
-//         <mesh geometry={nodes.rocks004_Rock_texture_0.geometry} material={materials.Rock_texture} position={[1172.839, 12.965, -771.341]} rotation={[-Math.PI / 2, 0, 0]} scale={100} />
-//         <mesh geometry={nodes.Roof_2_House_material_0.geometry} material={materials.newRoof} position={[400, 200, 0]} rotation={[-Math.PI / 2, 0, 0]} scale={100} />
-//         <mesh geometry={nodes.Roof_3_House_material_0.geometry} material={materials.newRoof} position={[400, 200, 0]} rotation={[-Math.PI / 2, 0, 0]} scale={100} />
-//         <mesh geometry={nodes.Roof_3001_House_material_0.geometry} material={materials.House_material} position={[400, 200, 0]} rotation={[-Math.PI / 2, 0, 0]} scale={100} />
-//         <mesh geometry={nodes.Stone_pillar_House_material_0.geometry} material={materials.House_material} position={[-199.478, 46, 198.253]} rotation={[-Math.PI / 2, 0, 0]} scale={100} />
-//         <mesh geometry={nodes.Stone_pillar_gate_House_material_0.geometry} material={materials.House_material} position={[-338.502, 43.966, 1129.598]} rotation={[-Math.PI / 2, 0, 0]} scale={100} />
-//         <mesh geometry={nodes.Stone_pillar_gate001_House_material_0.geometry} material={materials.House_material} position={[404.712, 43.966, 1129.598]} rotation={[-Math.PI / 2, 0, 0]} scale={100} />
-//         <mesh geometry={nodes.Stone_pillar001_House_material_0.geometry} material={materials.House_material} position={[200, 46, 198.253]} rotation={[-Math.PI / 2, 0, 0]} scale={100} />
-//         <mesh geometry={nodes.Stone_pillar002_House_material_0.geometry} material={materials.House_material} position={[-199.478, 46, -200]} rotation={[-Math.PI / 2, 0, 0]} scale={100} />
-//         <mesh geometry={nodes.Stone_pillar003_House_material_0.geometry} material={materials.House_material} position={[686.116, 46, 198.253]} rotation={[-Math.PI / 2, 0, 0]} scale={100} />
-//         <mesh geometry={nodes.Window_front_2nd_floor002_House_material_0.geometry} material={materials.House_material} position={[450, 477.255, -595.358]} rotation={[-Math.PI / 2, 0, 0]} scale={100} />
-//         <mesh geometry={nodes.Wood_panel_top_G_House_material_0.geometry} material={materials.House_material} position={[0, 200, 0]} rotation={[-Math.PI / 2, 0, 0]} scale={100} />
-//         </group>
-//     </group>
-
-//   );
-// }
-
-// useGLTF.preload("models/scene.glb");

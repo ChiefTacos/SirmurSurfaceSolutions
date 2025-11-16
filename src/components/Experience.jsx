@@ -25,54 +25,54 @@ export const Experience = (props) => {
   const cameraPositionX = useMotionValue(0); // Initialize with 0
   const cameraLookAtX = useMotionValue(0); // Initialize with 0
 
-const overlayResetFns = useRef([]);   // ← THIS for menu closing overlays
+// const overlayResetFns = useRef([]);   // ← THIS for menu closing overlays
 
-  const originalCameraState = useRef({
-    position: camera.position.clone(),
-    quaternion: camera.quaternion.clone(),
-  });
+//   const originalCameraState = useRef({
+//     position: camera.position.clone(),
+//     quaternion: camera.quaternion.clone(),
+//   });
 
-// Capture original camera once
-  useEffect(() => {
-    if (!originalCameraState.current.position.lengthSq()) {
-      originalCameraState.current = {
-        position: camera.position.clone(),
-        quaternion: camera.quaternion.clone(),
-      };
-    }
-  }, [camera]);
+// // Capture original camera once
+//   useEffect(() => {
+//     if (!originalCameraState.current.position.lengthSq()) {
+//       originalCameraState.current = {
+//         position: camera.position.clone(),
+//         quaternion: camera.quaternion.clone(),
+//       };
+//     }
+//   }, [camera]);
 
-  // Expose camera reset
-  useEffect(() => {
-    if (onResetCamera) {
-      onResetCamera(() => {
-        const startPos = camera.position.clone();
-        const startQuat = camera.quaternion.clone();
+//   // Expose camera reset
+//   useEffect(() => {
+//     if (onResetCamera) {
+//       onResetCamera(() => {
+//         const startPos = camera.position.clone();
+//         const startQuat = camera.quaternion.clone();
 
-        animate(0, 1, {
-          duration: 1.4,
-          ease: "easeInOut",
-          onUpdate: (t) => {
-            camera.position.lerpVectors(startPos, originalCameraState.current.position, t);
-            camera.quaternion.slerpQuaternions(startQuat, originalCameraState.current.quaternion, t);
-            camera.updateProjectionMatrix();
-          },
-        });
-      });
-    }
-  }, [camera, onResetCamera]);
+//         animate(0, 1, {
+//           duration: 1.4,
+//           ease: "easeInOut",
+//           onUpdate: (t) => {
+//             camera.position.lerpVectors(startPos, originalCameraState.current.position, t);
+//             camera.quaternion.slerpQuaternions(startQuat, originalCameraState.current.quaternion, t);
+//             camera.updateProjectionMatrix();
+//           },
+//         });
+//       });
+//     }
+//   }, [camera, onResetCamera]);
 
-  // Expose overlay reset collector
-  useEffect(() => {
-    if (onResetOverlays) {
-      onResetOverlays(() => {
-        overlayResetFns.current.forEach(fn => fn());
-        overlayResetFns.current = []; // clear after reset
-// ADD THIS LINE — clears the shared camera target
-        setCameraTarget(null);
-      });
-    }
-  }, [onResetOverlays, setCameraTarget]);
+//   // Expose overlay reset collector
+//   useEffect(() => {
+//     if (onResetOverlays) {
+//       onResetOverlays(() => {
+//         overlayResetFns.current.forEach(fn => fn());
+//         overlayResetFns.current = []; // clear after reset
+// // ADD THIS LINE — clears the shared camera target
+//         setCameraTarget(null);
+//       });
+//     }
+//   }, [onResetOverlays, setCameraTarget]);
 
 
 
@@ -122,18 +122,18 @@ const overlayResetFns = useRef([]);   // ← THIS for menu closing overlays
     //   state.camera.lookAt(cameraLookAtX.get(), 0, 0);
     // }
 
-    if (!isAnimating && cameraTarget) {
-      // Maintain OverlayItem's camera position and lookAt
-      console.log("Applying cameraTarget:", cameraTarget);
-      camera.position.set(...cameraTarget.position);
-      camera.lookAt(...cameraTarget.lookAt);
-      camera.updateProjectionMatrix();
-    } else if (!isAnimating) {
-      // Default behavior when no OverlayItem is active
-      camera.position.x = cameraPositionX.get();
-      camera.lookAt(cameraLookAtX.get(), 0, 0);
-      camera.updateProjectionMatrix();
-    }
+    // if (!isAnimating && cameraTarget) {
+    //       Maintain OverlayItem's camera position and lookAt
+    //   console.log("Applying cameraTarget:", cameraTarget);
+    //   camera.position.set(...cameraTarget.position);
+    //   camera.lookAt(...cameraTarget.lookAt);
+    //   camera.updateProjectionMatrix();
+    // } else if (!isAnimating) {
+    //        Default behavior when no OverlayItem is active
+    //   camera.position.x = cameraPositionX.get();
+    //   camera.lookAt(cameraLookAtX.get(), 0, 0);
+    //   camera.updateProjectionMatrix();
+    // }
 
     // const position = new THREE.Vector3();
     // characterContainerAboutRef.current.getWorldPosition(position);
