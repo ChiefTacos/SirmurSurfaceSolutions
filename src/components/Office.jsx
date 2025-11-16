@@ -507,19 +507,26 @@ const snapBackIntoBounds = () => {
       >
         <span className="absolute inset-0 rounded-2xl bg-gradient-to-r from-emerald-500 via-cyan-500 to-sky-600 p-[2px] opacity-0 transition-opacity duration-500 group-hover:opacity-100"></span>
 
-        <span className="relative z-10 block px-8 py-4 rounded-2xl bg-neutral-950">
+        <span className="relative z-10  block px-4 lg:px-6  py-4 rounded-2xl bg-neutral-950">
           <div className="relative z-10 flex items-center space-x-3">
-            <span className="transition-all duration-500 group-hover:translate-x-1.5 group-hover:text-emerald-300 text-lg font-medium">
-              View Service
-            </span>
-            <svg
+                <div className="hidden lg:inline ">
+
+                  <span className="transition-all duration-500 group-hover:translate-x-1.5 group-hover:text-emerald-300 lg:text-2xl text-xl font-medium ">
+                    View 
+                    <br /> Service
+                  </span>
+                </div>
+
+            {/* <svg
               xmlns="http://www.w3.org/2000/svg"
               viewBox="0 0 24 24"
               fill="currentColor"
-              className="w-7 h-7 transition-all duration-500 group-hover:translate-x-1.5 group-hover:text-emerald-300"
+              className="w-6 h-9 transition-all duration-500 group-hover:translate-x-2 group-hover:text-emerald-300"
             >
               <path d="M16.172 11l-5.364-5.364 1.414-1.414L20 12l-7.778 7.778-1.414-1.414L16.172 13H4v-2z" />
-            </svg>
+            </svg> */}
+<svg xmlns="http://www.w3.org/2000/svg" width="48" height="48" viewBox="0 0 24 24" fill="#FFFFFF" stroke="#FFFFFF" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 4.1 12 6"></path><path d="m5.1 8-2.9-.8"></path><path d="m6 12-1.9 2"></path><path d="M7.2 2.2 8 5.1"></path><path d="M9.037 9.69a.498.498 0 0 1 .653-.653l11 4.5a.5.5 0 0 1-.074.949l-4.349 1.041a1 1 0 0 0-.74.739l-1.04 4.35a.5.5 0 0 1-.95.074z"></path></svg>
+
           </div>
         </span>
       </button>
