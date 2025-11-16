@@ -29,25 +29,36 @@ const resetOverlaysRef = useRef(() => {});   // ← NEW with other one
       useEffect(() => {
         setMenuOpened(false);
       }, [section]);
-      
-      useEffect(() => {
-        const isMobile = window.innerWidth < 1024;
+      const [isTouchDevice, setIsTouchDevice] = useState(false);
 
-        if (isMobile && section === 0) {
-          // Lock all scroll + touchmove
-          document.body.style.overflow = "hidden";
-          document.body.style.touchAction = "none"; // disable pan, pinch, swipe
-        } else {
-          // Restore
-          document.body.style.overflow = "";
-          document.body.style.touchAction = "";
-        }
+          // Detect mobile + tablet
+          useEffect(() => {
+            const checkDevice = () => {
+              setIsTouchDevice(window.innerWidth < 1024);
+            };
 
-        return () => {
-          document.body.style.overflow = "";
-          document.body.style.touchAction = "";
-        };
-      }, [section]);
+            checkDevice();
+            window.addEventListener("resize", checkDevice);
+
+            return () => window.removeEventListener("resize", checkDevice);
+          }, []);
+
+          // Disable scroll & touch for touch devices
+          useEffect(() => {
+            if (isTouchDevice) {
+              document.body.style.overflow = "hidden";
+              document.body.style.touchAction = "none";
+            } else {
+              document.body.style.overflow = "";
+              document.body.style.touchAction = "";
+            }
+
+            return () => {
+              document.body.style.overflow = "";
+              document.body.style.touchAction = "";
+            };
+          }, [isTouchDevice]);
+
 
   return (
     <>
