@@ -546,7 +546,8 @@ export function Office({ section, menuOpened, isDay, setIsAnimating, setCameraTa
         <mesh geometry={nodes.Balcony_rail_glass001_House_material_0.geometry} material={materials.House_material} />
         
       </group>
-      <mesh position={[1.2, -0.1, -7.2]} visible={false}>
+      <mesh position={[1.2, -0.1, -7.2]} visible={false}   name="balcony-overlay-anchor"
+>
       <OverlayItem
         section={section}
         id="balcony"                     // ← give each one a unique string
@@ -558,9 +559,6 @@ export function Office({ section, menuOpened, isDay, setIsAnimating, setCameraTa
           description="Glass + frame scrub"
           price="250-500"
           bgColor="bg-yellow-500"
-          parentGroupRef={balconyRailGroupRef}
-  activeOverlayId={activeOverlayId}
-  setActiveOverlayId={setActiveOverlayId}
         /></mesh>
         <group position={[400, 200, 0]} rotation={[-Math.PI / 2, 0, 0]} scale={100}>
           <mesh geometry={nodes.Door_Front_House_material_0.geometry} material={materials.House_material} />
