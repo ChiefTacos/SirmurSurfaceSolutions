@@ -614,7 +614,7 @@ export function Office({ section, menuOpened, isDay, setIsAnimating, setCameraTa
           key="balcony"
     activeOverlay={activeOverlay}
   setActiveOverlay={setActiveOverlay}
-          rotation={[Math.PI / 2, Math.PI / 2, 0]}
+          rotation={[Math.PI / 2, -Math.PI / 2, 0]}
          position={[0, 0, 0]}
          distanceFactor={balcony.distanceFactor}
           title="Balcony Rail Cleaning"
