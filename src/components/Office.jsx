@@ -622,16 +622,14 @@ export function Office({ section, menuOpened, isDay, setIsAnimating, setCameraTa
         <mesh geometry={nodes.Balcony_rail_glass001_House_material_0.geometry} material={materials.House_material} />
         
       </group>
+      <mesh position={[1.2, -0.1, -7.2]} visible={false}>
       <OverlayItem
         section={section}
         id="balcony"                     // ← give each one a unique string
           key="balcony-rail"
-          rotationX={Math.PI / 2}
-          rotationY={-Math.PI / 2}
-          rotationZ={0}
-          positionX={1.2}
-          positionY={-0.1}
-          positionZ={-7.2}
+          rotation={[Math.PI / 2, Math.PI / 2, 0]}
+         position={[0, 0, 0]}
+         distanceFactor={15}
           title="Balcony Rail Cleaning"
           description="Glass + frame scrub"
           price="250-500"
@@ -639,7 +637,7 @@ export function Office({ section, menuOpened, isDay, setIsAnimating, setCameraTa
           parentGroupRef={balconyRailGroupRef}
   activeOverlayId={activeOverlayId}
   setActiveOverlayId={setActiveOverlayId}
-        />
+        /></mesh>
         <group position={[400, 200, 0]} rotation={[-Math.PI / 2, 0, 0]} scale={100}>
           <mesh geometry={nodes.Door_Front_House_material_0.geometry} material={materials.House_material} />
           <mesh geometry={nodes.Door_Front_House_material_0001.geometry} material={materials.House_material} />
@@ -728,7 +726,31 @@ export function Office({ section, menuOpened, isDay, setIsAnimating, setCameraTa
         <mesh geometry={nodes.Driveway_House_material_0.geometry} material={materials.House_material} />
         
       </group>
-      <OverlayItem
+      {/* INVISIBLE ANCHOR FOR DRIVEWAY OVERLAY — this is the magic */}
+<mesh
+  position={[14.128, 8.8, 1082]}   // X/Z matches your driveway group, Y = height above ground
+  visible={false}               // completely invisible
+  name="driveway-overlay-anchor"
+>
+  <OverlayItem
+    section={section}
+    id="driveway"
+    key="driveway"
+    // No crazy numbers anymore!
+    position={[0, 0, 0]}          // now relative to the anchor
+    rotation={[Math.PI / 2, -Math.PI / 2, 0]}
+    
+    distanceFactor={14}           // perfect size on all devices
+    
+    title="Driveway Cleaning"
+    description="Oil stains + power wash"
+    price="300-600"
+    bgColor="bg-blue-500"
+    
+    // Remove parentGroupRef entirely — the mesh itself is the parent now!
+  />
+</mesh>
+      {/* <OverlayItem
         section={section}
         id="driveway"                     // ← give each one a unique string
           key="driveway"
@@ -736,18 +758,20 @@ export function Office({ section, menuOpened, isDay, setIsAnimating, setCameraTa
           rotationY={-Math.PI / 2}
           rotationZ={0}
           positionX={0.2}
-          positionY={-900.1}
-          positionZ={500.4}
+          positionY={3}          // ← was -900.1
+          positionZ={15}         // ← was 500.4
+          distanceFactor={16}
           title="Driveway Cleaning"
           description="Oil stains + power wash"
           price="300-600"
           bgColor="bg-blue-500"
           parentGroupRef={drivewayGroupRef}
           
-          distanceFactor={26}
           activeOverlayId={activeOverlayId}
         setActiveOverlayId={setActiveOverlayId}
-        />
+        /> */}
+
+
         <group position={[-4.128, 0, 305.314]} rotation={[-Math.PI / 2, 0, 0]} scale={100} ref={balconyRailGroupRef}>
           <mesh geometry={nodes.Driveway_House_material_0.geometry} material={materials.House_material} />
           
