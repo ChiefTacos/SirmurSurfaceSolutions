@@ -35,6 +35,9 @@ const [showContent, setShowContent] = useState(false); // State to control visib
 const [isClickable, setIsClickable] = useState(true); //prevent bug when going reseting while animation runs
 
 const [windowPos, setWindowPos] = useState({ x: 0, y: 0 });
+const overlayRef = useRef(null); 
+
+
 const htmlOffset = useRef({ x: 0, y: 0 });
 const dragOffset = useRef({ x: 0, y: 0 });
 const isDragging = useRef(false);
@@ -91,88 +94,22 @@ useEffect(() => {
 
 
 
-// const handleButtonClick = (e) => {
-//   e.stopPropagation();
-//   console.log("Add to Cart Clicked:", { title, position: [positionX, positionY, positionZ] });
-
-//   if (!isClickable || !parentGroupRef.current) return;
-//   setIsClickable(false);
-//   setIsAnimating(true);
-
-//   // Save initial camera state
-//   initialCameraState.current = {
-//     position: camera.position.clone(),
-//     quaternion: camera.quaternion.clone(),
-//   };
-
-//   // Update parent group world matrix
-//   parentGroupRef.current.updateWorldMatrix(true, false);
-//   const parentMatrix = parentGroupRef.current.matrixWorld;
-//   const parentWorldPos = new THREE.Vector3().setFromMatrixPosition(parentMatrix);
-
-//   // Get OverlayItem world position
-//   const localPos = new THREE.Vector3(positionX, positionY, positionZ);
-//   const overlayWorldPos = localPos.clone().applyMatrix4(parentMatrix);
-
-//   // === NEW: ROBUST & RELIABLE CAMERA POSITIONING ===
-//   const WORLD_UP = new THREE.Vector3(0, 1, 0); // Always up in world space
-
-//   // Direction from current camera to group (projected to XZ plane)
-//   const cameraToGroup = new THREE.Vector3()
-//     .subVectors(camera.position, parentWorldPos);
-//   const horizontalDir = new THREE.Vector3(cameraToGroup.x, 0, cameraToGroup.z).normalize();
-
-//   // If camera is directly above/below, use a fallback direction
-//   if (horizontalDir.lengthSq() < 0.01) {
-//     horizontalDir.set(1, 0, 0); // fallback: right
-//   }
-
-//   // Final camera position: above + offset in viewing direction
-// const HEIGHT_ABOVE = props.cameraHeight || 3;
-// const DISTANCE_OUT = props.cameraDistance || 5;
-
-
-//   const cameraTargetPos = parentWorldPos.clone()
-//     .add(WORLD_UP.clone().multiplyScalar(HEIGHT_ABOVE))
-//     .add(horizontalDir.clone().multiplyScalar(DISTANCE_OUT));
-
-//   // === Animate camera smoothly ===
-//   const startPos = camera.position.clone();
-//   animate(0, 1, {
-//     duration: 1,
-//     onUpdate: (t) => {
-//       // Move camera
-//       camera.position.lerpVectors(startPos, cameraTargetPos, t);
-//       // Always look at the OverlayItem
-//       camera.lookAt(overlayWorldPos);
-//       camera.updateProjectionMatrix();
-//     },
-//     onComplete: () => {
-//       console.log("Camera animation complete");
-//     }
-//   });
-
-
-
-
-//   // Store for external use (e.g. orbit controls)
-//   setCameraTarget({
-//     position: cameraTargetPos.toArray(),
-//     lookAt: overlayWorldPos.toArray(),
-//   });
-
-//   // Show content after animation
-//   setTimeout(() => {
-//     setShowContent(true);
-//     setIsAnimating(false);
-//   }, 1000);
-// };
 const handleButtonClick = (e) => {
   e.stopPropagation();
-
-  // Just open the overlay instantly — NO CAMERA STUFF
   setShowContent(true);
 };
+useEffect(() => {
+  if (!showContent || !overlayRef.current) return;
+
+  const el = overlayRef.current;
+  const rect = el.getBoundingClientRect();
+
+  setWindowPos({
+    x: window.innerWidth / 2 - rect.width / 2,
+    y: window.innerHeight / 2 - rect.height / 2,
+  });
+}, [showContent]);
+
 const handleResetClick = (e) => {
   e.stopPropagation();
   setShowContent(false);
@@ -220,69 +157,55 @@ const handleDragEnd = () => {
 
   requestAnimationFrame(mobileMomentum);
 };
+
+
 const mobileMomentum = () => {
-  if (isDragging.current) return; // safety
+  if (isDragging.current) return;
 
-  const v = velocity.current;
+  const speed = Math.abs(velocity.current.x) + Math.abs(velocity.current.y);
 
-  // if velocity is basically zero, begin boundary snap only
-  if (Math.abs(v.x) < minVelocity && Math.abs(v.y) < minVelocity) {
+  if (speed > 0.5) {
+    setWindowPos(prev => ({
+      x: prev.x + velocity.current.x * 16,
+      y: prev.y + velocity.current.y * 16,
+    }));
+
+    velocity.current.x *= friction;
+    velocity.current.y *= friction;
+
+    requestAnimationFrame(mobileMomentum);
+  } else {
     snapBackIntoBounds();
-    return;
   }
-
-  // apply friction for momentum movement
-  setWindowPos((prev) => ({
-    x: prev.x + v.x * 20,
-    y: prev.y + v.y * 20,
-  }));
-
-  // decay velocity
-  velocity.current = {
-    x: v.x * friction,
-    y: v.y * friction,
-  };
-
-  requestAnimationFrame(mobileMomentum);
 };
-const snapBackIntoBounds = () => {
-  const padding = 20;
-  const width = window.innerWidth;
-  const height = window.innerHeight;
 
-  setWindowPos((prev) => {
+const snapBackIntoBounds = () => {
+  if (!overlayRef.current) return;
+
+  const el = overlayRef.current;
+  const rect = el.getBoundingClientRect();
+  const padding = 20;
+
+  setWindowPos(prev => {
     let x = prev.x;
     let y = prev.y;
 
-    const visualX = x;  // not x + htmlOffset.current.x
-    const visualY = y;
-
-    // LEFT boundary
-    if (visualX < padding) {
-      x = padding - htmlOffset.current.x;
-    }
-
-    // RIGHT boundary
-    if (visualX > width - padding) {
-      x = width - padding - htmlOffset.current.x;
-    }
-
-    // TOP boundary
-    if (visualY < padding) {
-      y = padding - htmlOffset.current.y;
-    }
-
-    // BOTTOM boundary
-    if (visualY > height - padding) {
-      y = height - padding - htmlOffset.current.y;
-    }
+    if (rect.left < padding) x += padding - rect.left;
+    if (rect.right > window.innerWidth - padding) x -= rect.right - (window.innerWidth - padding);
+    if (rect.top < padding) y += padding - rect.top;
+    if (rect.bottom > window.innerHeight - padding) y -= rect.bottom - (window.innerHeight - padding);
 
     return { x, y };
   });
 };
 
-
-
+useEffect(() => {
+  const handleResize = () => {
+    if (showContent) snapBackIntoBounds();
+  };
+  window.addEventListener("resize", handleResize);
+  return () => window.removeEventListener("resize", handleResize);
+}, [showContent]);
 
   const handlePointerDown = (e) => {
     e.stopPropagation();
@@ -347,6 +270,7 @@ portal={{ current: portalRoot.current }}
           <div className="text-sm w-full relative" style={{ pointerEvents: "none" }}>
               {showContent ? (
                 <div
+                ref={overlayRef}
                 className="bg-white  rounded-lg shadow-2xl border border-gray-200 overflow-hidden
                    min-h-[110vh]
                    lg:min-h-[90vh]
@@ -437,10 +361,10 @@ portal={{ current: portalRoot.current }}
         <span className="absolute inset-0 rounded-2xl bg-gradient-to-r from-emerald-500 via-cyan-500 to-sky-600 p-[2px] opacity-0 transition-opacity duration-500 group-hover:opacity-100"></span>
 
         <span className="relative z-10  block px-4 lg:px-6  py-4 rounded-2xl bg-neutral-950">
-          <div className="relative z-10 flex items-center space-x-3">
+          <div className="relative z-10 flex items-center space-x-3 ">
                 <div className="hidden lg:inline ">
 
-                  <span className="transition-all duration-500 group-hover:translate-x-1.5 group-hover:text-emerald-300 lg:text-2xl text-xl font-medium ">
+                  <span className="transition-all duration-500 group-hover:translate-x-1.5 group-hover:text-emerald-300 lg:text-2xl text-xl font-medium pointer-events-none">
                     View 
                     <br /> Service
                   </span>
