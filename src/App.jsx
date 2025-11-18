@@ -59,12 +59,7 @@ const resetOverlaysRef = useRef(() => {});   // ← NEW with other one
     inset: 0,
     zIndex: 9999,
     pointerEvents: "none",
-    webkitTouchCallout: "none", 
-  webkitUserSelect: "none", 
-  mozUserSelect: "none", /* Firefox */
-  msUserSelect: "none", /* Internet Explorer/Edge */
-  userSelect: "none", /* Non-prefixed version, currently supported by Chrome, Edge, Opera and Firefox */
-  touchAction: "none", /* Disable default touch actions, useful for mobile */
+    
   }}
 ></div>    <MotionConfig transition={{ ...framerMotionConfig }}>
         <Canvas
@@ -73,6 +68,16 @@ const resetOverlaysRef = useRef(() => {});   // ← NEW with other one
           camera={{ position: [0, 3, 10], fov: 59 }}
           gl={{ preserveDrawingBuffer: true }}
           clear={false} // Ensures sky renders first
+
+          className="fixed inset-0" // cleaner than inline styles for positioning
+  style={{
+    touchAction: "none",
+    WebkitTapHighlightColor: "transparent",
+  }}
+          onContextMenu={(e) => e.preventDefault()}        // blocks right-click menu
+  onSelectStart={(e) => e.preventDefault()}        // blocks selection
+  onPointerDown={(e) => e.stopPropagation()}       // helps with event conflicts
+  tabIndex={-1}
         >
           <MobileFOV />
           <DayNightSky debugForceDay={isDay} />
