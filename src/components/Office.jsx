@@ -604,7 +604,7 @@ export function Office({ section, menuOpened, isDay, setIsAnimating, setCameraTa
       <OverlayItem
         section={section}
         id="balcony"                    
-          key="balcony-rail"
+          key="balcony"
     
           rotation={[Math.PI / 2, Math.PI / 2, 0]}
          position={[0, 0, 0]}

@@ -58,7 +58,13 @@ const resetOverlaysRef = useRef(() => {});   // ← NEW with other one
     position: "fixed",
     inset: 0,
     zIndex: 9999,
-    pointerEvents: "none"
+    pointerEvents: "none",
+    webkitTouchCallout: "none", 
+  webkitUserSelect: "none", 
+  mozUserSelect: "none", /* Firefox */
+  msUserSelect: "none", /* Internet Explorer/Edge */
+  userSelect: "none", /* Non-prefixed version, currently supported by Chrome, Edge, Opera and Firefox */
+  touchAction: "none", /* Disable default touch actions, useful for mobile */
   }}
 ></div>    <MotionConfig transition={{ ...framerMotionConfig }}>
         <Canvas
