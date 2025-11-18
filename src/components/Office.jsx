@@ -546,7 +546,7 @@ export function Office({ section, menuOpened, isDay, setIsAnimating, setCameraTa
         <mesh geometry={nodes.Balcony_rail_glass001_House_material_0.geometry} material={materials.House_material} />
         
       </group>
-      <mesh position={[1.2, -0.1, -7.2]} visible={false}   name="balcony-overlay-anchor"
+      <mesh position={[1.2, -900.1, 257.2]} visible={false}   name="balcony-overlay-anchor"
 >
       <OverlayItem
         section={section}
@@ -650,7 +650,7 @@ export function Office({ section, menuOpened, isDay, setIsAnimating, setCameraTa
       </group>
       {/* INVISIBLE ANCHOR FOR DRIVEWAY OVERLAY — this is the magic */}
 <mesh
-  position={[14.128, 8.8, 1082]}   // X/Z matches your driveway group, Y = height above ground
+  position={[14.128, -1808.8, 782]}   // X/Z matches your driveway group, Y = height above ground
   visible={false}               // completely invisible
   name="driveway-overlay-anchor"
 >
