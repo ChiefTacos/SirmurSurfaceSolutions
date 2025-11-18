@@ -25,6 +25,9 @@ const OverlayItem = ({
   parentGroupRef, 
   registerOverlayReset,
   section,
+  id,                    
+  activeOverlay,
+  setActiveOverlay,
   ...props
 }) => {
   const { camera, gl } = useThree();
@@ -36,7 +39,8 @@ const [isClickable, setIsClickable] = useState(true); //prevent bug when going r
 
 const [windowPos, setWindowPos] = useState({ x: 0, y: 0 });
 const overlayRef = useRef(null); 
-
+const isActive = activeOverlay === id;
+  const isAnyOverlayOpen = activeOverlay !== null;
 
 
 const htmlOffset = useRef({ x: 0, y: 0 });
@@ -102,7 +106,7 @@ useEffect(() => {
 
 const handleButtonClick = (e) => {
   e.stopPropagation();
-  setShowContent(true);
+setActiveOverlay(id);        // ← Now only ONE can be active
 };
 useEffect(() => {
   if (!showContent || !overlayRef.current) return;
@@ -118,7 +122,7 @@ useEffect(() => {
 
 const handleResetClick = (e) => {
   e.stopPropagation();
-  setShowContent(false);
+setActiveOverlay(null);      
 };
 
 
@@ -222,6 +226,7 @@ useEffect(() => {
     e.stopPropagation();
     console.log("Test Button Clicked!");
   };
+  const showButton = !isAnyOverlayOpen;
 
   return (
     <group
@@ -259,7 +264,7 @@ portal={{ current: portalRoot.current }}
       >
 
           <div className="text-sm w-full relative" style={{ pointerEvents: "none" }}>
-              {showContent ? (
+              {isActive && (
                 <div
                 ref={overlayRef}
                 className="bg-white  rounded-lg shadow-2xl border border-gray-200 overflow-hidden
@@ -283,7 +288,8 @@ portal={{ current: portalRoot.current }}
                     cursor: "default",
                     pointerEvents: "auto",
                      userSelect: "none",
-                     webkitUserSelect: "none",
+                     WebkitUserSelect: "none",
+                     zIndex: "100",
             }}
           >
 
@@ -328,8 +334,9 @@ portal={{ current: portalRoot.current }}
           
         </div>
       </div>
-    ) : (
-     
+  )}
+ 
+     {!isAnyOverlayOpen && (
       <div className="flex items-center justify-center">
     <div 
       className="relative group"
@@ -376,7 +383,7 @@ portal={{ current: portalRoot.current }}
       </button>
     </div>
   </div>
-    )}
+)}
   </div>
 </div>
 
@@ -436,7 +443,7 @@ function SquareComponent({ position, rotation, scale }) {
     </mesh>
   );
 }
-export function Office({ section, menuOpened, isDay, setIsAnimating, setCameraTarget, activeOverlayId, setActiveOverlayId, ...props }) {
+export function Office({ section, menuOpened, isDay, setIsAnimating, setCameraTarget, activeOverlay, setActiveOverlay, ...props }) {
   const group = useRef();
   const balconyRailGroupRef = useRef();
   const deckFloorGroupRef = useRef();
@@ -605,7 +612,8 @@ export function Office({ section, menuOpened, isDay, setIsAnimating, setCameraTa
         section={section}
         id="balcony"                    
           key="balcony"
-    
+    activeOverlay={activeOverlay}
+  setActiveOverlay={setActiveOverlay}
           rotation={[Math.PI / 2, Math.PI / 2, 0]}
          position={[0, 0, 0]}
          distanceFactor={balcony.distanceFactor}
@@ -716,7 +724,8 @@ export function Office({ section, menuOpened, isDay, setIsAnimating, setCameraTa
     rotation={[Math.PI / 2, -Math.PI / 2, 0]}
     
     distanceFactor={driveway.distanceFactor}          
-    
+    activeOverlay={activeOverlay}
+  setActiveOverlay={setActiveOverlay}
     title="Driveway Cleaning"
     description="Oil stains + power wash"
     price="300-600"

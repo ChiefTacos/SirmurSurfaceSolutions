@@ -24,56 +24,7 @@ export const Experience = (props) => {
 
   const cameraPositionX = useMotionValue(0); // Initialize with 0
   const cameraLookAtX = useMotionValue(0); // Initialize with 0
-
-// const overlayResetFns = useRef([]);   // ← THIS for menu closing overlays
-
-//   const originalCameraState = useRef({
-//     position: camera.position.clone(),
-//     quaternion: camera.quaternion.clone(),
-//   });
-
-// // Capture original camera once
-//   useEffect(() => {
-//     if (!originalCameraState.current.position.lengthSq()) {
-//       originalCameraState.current = {
-//         position: camera.position.clone(),
-//         quaternion: camera.quaternion.clone(),
-//       };
-//     }
-//   }, [camera]);
-
-//   // Expose camera reset
-//   useEffect(() => {
-//     if (onResetCamera) {
-//       onResetCamera(() => {
-//         const startPos = camera.position.clone();
-//         const startQuat = camera.quaternion.clone();
-
-//         animate(0, 1, {
-//           duration: 1.4,
-//           ease: "easeInOut",
-//           onUpdate: (t) => {
-//             camera.position.lerpVectors(startPos, originalCameraState.current.position, t);
-//             camera.quaternion.slerpQuaternions(startQuat, originalCameraState.current.quaternion, t);
-//             camera.updateProjectionMatrix();
-//           },
-//         });
-//       });
-//     }
-//   }, [camera, onResetCamera]);
-
-//   // Expose overlay reset collector
-//   useEffect(() => {
-//     if (onResetOverlays) {
-//       onResetOverlays(() => {
-//         overlayResetFns.current.forEach(fn => fn());
-//         overlayResetFns.current = []; // clear after reset
-// // ADD THIS LINE — clears the shared camera target
-//         setCameraTarget(null);
-//       });
-//     }
-//   }, [onResetOverlays, setCameraTarget]);
-
+const [activeOverlay, setActiveOverlay] = useState(null); 
 
 
 
@@ -83,15 +34,6 @@ export const Experience = (props) => {
   const registerOverlayReset = (resetFn) => {
     overlayResetFns.current.push(resetFn);
   };
-  //old logic for moving menu 5 units back and forth but buggy with 3d text signs
-  // useEffect(() => {
-  //   animate(cameraPositionX, menuOpened ? -5 : 0, {
-  //     ...framerMotionConfig,
-  //   });
-  //   animate(cameraLookAtX, menuOpened ? 5 : 0, {
-  //     ...framerMotionConfig,
-  //   });
-  // }, [menuOpened]);
 
 
   
@@ -116,35 +58,7 @@ export const Experience = (props) => {
       setSection(curSection);
     }
 
-    // Only update camera if not animating
-    // if (!isAnimating) {
-    //   state.camera.position.x = cameraPositionX.get();
-    //   state.camera.lookAt(cameraLookAtX.get(), 0, 0);
-    // }
-
-    // if (!isAnimating && cameraTarget) {
-    //       Maintain OverlayItem's camera position and lookAt
-    //   console.log("Applying cameraTarget:", cameraTarget);
-    //   camera.position.set(...cameraTarget.position);
-    //   camera.lookAt(...cameraTarget.lookAt);
-    //   camera.updateProjectionMatrix();
-    // } else if (!isAnimating) {
-    //        Default behavior when no OverlayItem is active
-    //   camera.position.x = cameraPositionX.get();
-    //   camera.lookAt(cameraLookAtX.get(), 0, 0);
-    //   camera.updateProjectionMatrix();
-    // }
-
-    // const position = new THREE.Vector3();
-    // characterContainerAboutRef.current.getWorldPosition(position);
-    // console.log([position.x, position.y, position.z]);
-
-    // const quaternion = new THREE.Quaternion();
-    // characterContainerAboutRef.current.getWorldQuaternion(quaternion);
-    // const euler = new THREE.Euler();
-    // euler.setFromQuaternion(quaternion, "XYZ");
-
-    // console.log([euler.x, euler.y, euler.z]);
+   
   });
 
   return (
@@ -210,7 +124,11 @@ export const Experience = (props) => {
 
 
       >
-        <Office section={section} menuOpened={menuOpened} isDay={isDay} setIsAnimating={setIsAnimating} setCameraTarget={setCameraTarget}  registerOverlayReset={registerOverlayReset} />
+        <Office section={section} menuOpened={menuOpened} isDay={isDay} setIsAnimating={setIsAnimating} setCameraTarget={setCameraTarget}
+          registerOverlayReset={registerOverlayReset}
+          activeOverlay={activeOverlay}
+  setActiveOverlay={setActiveOverlay}
+   />
         <MuscleCar />
          {/* <RVmodel />  */}
          
