@@ -38,6 +38,7 @@ const [windowPos, setWindowPos] = useState({ x: 0, y: 0 });
 const overlayRef = useRef(null); 
 
 
+
 const htmlOffset = useRef({ x: 0, y: 0 });
 const dragOffset = useRef({ x: 0, y: 0 });
 const isDragging = useRef(false);
@@ -49,6 +50,11 @@ const friction = 0.92; // momentum decay
 const minVelocity = 0.1; // stop threshold
 
 const portalRoot = useRef(null);
+
+
+
+
+
 
 useEffect(() => {
   // Create a unique div for THIS overlay instance
@@ -225,22 +231,7 @@ useEffect(() => {
     >
      
      
-     {/* old working mac os html */}
-      {/* <Html
-  portal={{ current: gl.domElement.parentNode }}
-  style={{
-    position: "absolute",
-    top: "50%",
-    left: "50%",
-    transform: "translate(-50%, -50%)",
-    width: "22rem",
-    pointerEvents: "none",
-    zIndex: "1",
-  }}
-  center
-  distanceFactor={distanceFactor}     // was 20 → makes everything bigger
-  occlude={false}       // disables distance-based auto-scaling → same size everywhere
-> */}
+     
         <Html
 portal={{ current: portalRoot.current }}  
             style={{
@@ -273,11 +264,11 @@ portal={{ current: portalRoot.current }}
                 ref={overlayRef}
                 className="bg-white  rounded-lg shadow-2xl border border-gray-200 overflow-hidden
                    min-h-[110vh]
-                   lg:min-h-[90vh]
+                   lg:min-h-[80vh]
 
                   min-w-[120vw]     /* mobile first */
                   md:min-w-[1000px] md:max-w-[1150px]  /* tablet */
-                  lg:min-w-[1200px] lg:max-w-[1400px]  /* desktop */
+                  lg:min-w-[1000px] lg:max-w-[1400px]  /* desktop */
 
                 "
 
@@ -483,6 +474,67 @@ export function Office({ section, menuOpened, isDay, setIsAnimating, setCameraTa
     textureGlassMaterial.opacity = glassTextureOpacity.get();
   });
 
+
+  const [device, setDevice] = useState("desktop");
+
+  useEffect(() => {
+    const check = () => {
+      const w = window.innerWidth;
+      if (w <= 768) setDevice("mobile");
+      else if (w <= 1024) setDevice("tablet");
+      else setDevice("desktop");
+    };
+    check();
+    window.addEventListener("resize", check);
+    return () => window.removeEventListener("resize", check);
+  }, []);
+
+  const overlayConfig = {
+    balcony: {
+      distanceFactor: { desktop: 15, tablet: 25, mobile: 25 },
+      position: {
+        desktop: [1.2, -900.1, 257.2],
+        tablet:  [-228.117, 406.956, 1.194],   // customize as needed
+        mobile:  [-228.117, 406.956, 1.194],   // customize as needed
+      },
+    },
+    driveway: {
+      distanceFactor: { desktop: 14, tablet: 24, mobile: 24 },
+      position: {
+        desktop: [14.128, -1808.8, 782],
+        tablet:  [-4.128, 0, 305.314],
+        mobile:  [-4.128, 0, 305.314],
+      },
+    },
+  };
+
+  const getOverlayProps = (id) => {
+    const cfg = overlayConfig[id] || {
+      distanceFactor: { desktop: 15, tablet: 25, mobile: 25 },
+      position: { desktop: [0, 0, 0], tablet: [0, 0, 0], mobile: [0, 0, 0] },
+    };
+
+    const isMobile = device === "mobile";
+    const isTablet = device === "tablet";
+
+    return {
+      distanceFactor: isMobile || isTablet
+        ? cfg.distanceFactor[isMobile ? "mobile" : "tablet"]
+        : cfg.distanceFactor.desktop,
+
+      position: isMobile
+        ? cfg.position.mobile
+        : isTablet
+          ? cfg.position.tablet
+          : cfg.position.desktop,
+    };
+  };
+
+  // Now these are defined inside Office → safe to use!
+  const balcony = getOverlayProps("balcony");
+  const driveway = getOverlayProps("driveway");
+
+
   return (
     <group ref={group} {...props} dispose={null} position={[-11, -4, -2]} rotation={[0, 0, 0]} scale={0.01}>
       {/* <group scale={0.01}> */}
@@ -546,15 +598,17 @@ export function Office({ section, menuOpened, isDay, setIsAnimating, setCameraTa
         <mesh geometry={nodes.Balcony_rail_glass001_House_material_0.geometry} material={materials.House_material} />
         
       </group>
-      <mesh position={[1.2, -900.1, 257.2]} visible={false}   name="balcony-overlay-anchor"
+      <mesh position={balcony.position} visible={false}   name="balcony-overlay-anchor"
 >
+  {/* [1.2, -900.1, 257.2] */}
       <OverlayItem
         section={section}
-        id="balcony"                     // ← give each one a unique string
+        id="balcony"                    
           key="balcony-rail"
+    
           rotation={[Math.PI / 2, Math.PI / 2, 0]}
          position={[0, 0, 0]}
-         distanceFactor={15}
+         distanceFactor={balcony.distanceFactor}
           title="Balcony Rail Cleaning"
           description="Glass + frame scrub"
           price="250-500"
@@ -650,26 +704,24 @@ export function Office({ section, menuOpened, isDay, setIsAnimating, setCameraTa
       </group>
       {/* INVISIBLE ANCHOR FOR DRIVEWAY OVERLAY — this is the magic */}
 <mesh
-  position={[14.128, -1808.8, 782]}   // X/Z matches your driveway group, Y = height above ground
-  visible={false}               // completely invisible
+  position={driveway.position}  
+  visible={false} 
   name="driveway-overlay-anchor"
 >
   <OverlayItem
     section={section}
     id="driveway"
     key="driveway"
-    // No crazy numbers anymore!
-    position={[0, 0, 0]}          // now relative to the anchor
+    position={[0, 0, 0]}       
     rotation={[Math.PI / 2, -Math.PI / 2, 0]}
     
-    distanceFactor={14}           // perfect size on all devices
+    distanceFactor={driveway.distanceFactor}          
     
     title="Driveway Cleaning"
     description="Oil stains + power wash"
     price="300-600"
     bgColor="bg-blue-500"
     
-    // Remove parentGroupRef entirely — the mesh itself is the parent now!
   />
 </mesh>
       {/* <OverlayItem
